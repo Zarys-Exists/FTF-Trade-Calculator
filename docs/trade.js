@@ -1,12 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Fix: Initial URL Correction ---
-    // If the URL ends with /index.html, replace it with / for cleaner URLs.
-    if (window.location.pathname.endsWith('/index.html')) {
-        const cleanUrl = window.location.pathname.replace('/index.html', '/');
-        history.replaceState(null, '', cleanUrl);
-    }
-    // ------------------------------------
-
     const yourGrid = document.getElementById('your-offer-grid');
     const theirGrid = document.getElementById('their-offer-grid');
     const modal = document.getElementById('item-modal');
@@ -15,10 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('item-search');
     const resetBtn = document.getElementById('reset-trade-btn');
     const raritySidebar = document.querySelector('.rarity-sidebar');
-    const navLinksContainer = document.querySelector('.nav-links');
-    const calculatorPage = document.getElementById('calculator-page');
-    const guidePage = document.getElementById('guide-page');
-    let guideContentLoaded = false;
+    const navLinksContainer = document.querySelector('.nav-links'); // New: nav links container
+    const calculatorPage = document.getElementById('calculator-page'); // New: Calculator content wrapper
+    const guidePage = document.getElementById('guide-page'); // New: Guide content wrapper
+    let guideContentLoaded = false; // New: Flag to track if guide content is loaded
 
     let allItems = [];
     let activeSlot = null;
@@ -483,84 +475,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ROUTER LOGIC
     async function handleNavigation(path, pushState = true) {
+        // Remove active class from all nav links
         document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
 
-        if (path === '/' || path === '/index.html') {
+        // Determine current view and set active class
+        if (path === '/' || path === '/index.html') { // Home page (Trade Calculator)
             calculatorPage.style.display = 'block';
             guidePage.style.display = 'none';
             document.querySelector('.nav-link[href="./"]').classList.add('active');
-            if (pushState) history.pushState({ path: '/' }, '', './');
-            document.title = 'FTF Trade Calculator'; // Set page title
-        } else if (path === '/use-guide' || path === '/guide.html') {
+            if (pushState) history.pushState({ path: '/' }, '', './'); // Clean URL for home
+        } else if (path === '/use-guide' || path === '/guide.html') { // Use Guide page
             calculatorPage.style.display = 'none';
             guidePage.style.display = 'block';
             document.querySelector('.nav-link[href="./use-guide"]').classList.add('active');
-            document.title = 'FTF Calculator - Use Guide'; // Set page title
-
-            const guideContentPlaceholder = document.getElementById('guide-content-area'); // Target the new placeholder
 
             if (!guideContentLoaded) {
                 try {
-                    const response = await fetch('guide.html');
+                    const response = await fetch('guide.html'); // Fetch the content of guide.html
                     if (!response.ok) throw new Error('Failed to load guide.html');
                     const html = await response.text();
                     
+                    // Extract relevant content from guide.html
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
-                    // Target the specific inner content div from the partial guide.html
-                    const guideMainContent = doc.querySelector('.guide-page-inner-content'); // Updated selector
-                    if (guideMainContent && guideContentPlaceholder) {
-                        guideContentPlaceholder.innerHTML = guideMainContent.innerHTML; // Inject into new placeholder
+                    const guideMainContent = doc.querySelector('.guide-page-container'); // Assuming guide.html has a main content container with this class
+                    if (guideMainContent) {
+                        guidePage.innerHTML = guideMainContent.innerHTML;
                         guideContentLoaded = true;
-                    } else if (guideContentPlaceholder) {
-                        guideContentPlaceholder.innerHTML = '<p style="color: red;">Failed to parse guide content from guide.html. Check structure and selector.</p>';
+                    } else {
+                        guidePage.innerHTML = '<p style="color: red;">Failed to parse guide content.</p>';
                     }
                 } catch (error) {
                     console.error("Failed to load guide content:", error);
-                    if (guideContentPlaceholder) {
-                        guideContentPlaceholder.innerHTML = '<p style="color: red;">Could not load guide. Ensure guide.html exists and is correctly formatted.</p>';
-                    }
+                    guidePage.innerHTML = '<p style="color: red;">Could not load guide.</p>';
                 }
             }
             if (pushState) history.pushState({ path: '/use-guide' }, '', './use-guide');
         } else {
+            // Default to home if an unknown path is accessed
             handleNavigation('/', pushState);
             return;
         }
+        // Scroll to top of page on navigation
         window.scrollTo(0, 0);
     }
 
+    // Event listener for navigation links
     navLinksContainer.addEventListener('click', (e) => {
         const link = e.target.closest('.nav-link');
         if (link) {
-            e.preventDefault();
-            // Get the href attribute directly from the link element
-            let pathHref = link.getAttribute('href'); 
+            e.preventDefault(); // Prevent default link navigation
+            const path = new URL(link.href).pathname.split('/').pop(); // Get 'index.html', 'use-guide', etc.
+            
+            // Adjust path for cleaner routing logic
             let cleanPath;
-
-            if (pathHref === './' || pathHref === 'index.html') {
+            if (path === '' || path === 'index.html') {
                 cleanPath = '/';
-            } else if (pathHref === './use-guide' || pathHref === 'guide.html') {
+            } else if (path === 'use-guide') {
                 cleanPath = '/use-guide';
             } else {
-                cleanPath = pathHref;
+                cleanPath = path; // Fallback for other paths, though not expected here
             }
             handleNavigation(cleanPath);
         }
     });
 
+    // Handle browser back/forward buttons
     window.addEventListener('popstate', (e) => {
-        const fullPath = window.location.pathname;
+        const currentPath = window.location.pathname.split('/').pop();
         let cleanPath;
-        if (fullPath === '/' || fullPath.endsWith('/index.html')) {
+        if (currentPath === '' || currentPath === 'index.html') {
             cleanPath = '/';
-        } else if (fullPath.endsWith('/use-guide') || fullPath.endsWith('/guide.html')) {
+        } else if (currentPath === 'use-guide') {
             cleanPath = '/use-guide';
         } else {
-            cleanPath = fullPath.split('/').pop();
-            if (cleanPath === '') cleanPath = '/';
+            cleanPath = currentPath;
         }
-        handleNavigation(cleanPath, false);
+        handleNavigation(cleanPath, false); // Don't push state again on popstate
     });
 
     // Initial setup
@@ -571,15 +562,14 @@ document.addEventListener('DOMContentLoaded', () => {
     calculateAll();
 
     // Initial routing based on current URL
-    const initialFullPath = window.location.pathname;
+    const initialPath = window.location.pathname.split('/').pop();
     let cleanInitialPath;
-    if (initialFullPath === '/' || initialFullPath.endsWith('/index.html')) {
+    if (initialPath === '' || initialPath === 'index.html') {
         cleanInitialPath = '/';
-    } else if (initialFullPath.endsWith('/use-guide') || initialFullPath.endsWith('/guide.html')) {
+    } else if (initialPath === 'use-guide') {
         cleanInitialPath = '/use-guide';
     } else {
-        cleanInitialPath = initialFullPath.split('/').pop();
-        if (cleanInitialPath === '') cleanInitialPath = '/';
+        cleanInitialPath = initialPath;
     }
-    handleNavigation(cleanInitialPath, true);
+    handleNavigation(cleanInitialPath, true); // Push state initially to ensure clean URL on first load
 });
