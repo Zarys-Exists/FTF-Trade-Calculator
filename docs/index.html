@@ -13,12 +13,12 @@
     <div class="site-header">
         <h1 class="site-title">Zarys' FTF Calculator</h1>
         <div class="nav-links">
-            <a href="index.html" class="nav-link active">Trade Calculator</a>
-            <a href="guide.html" class="nav-link">Use Guide</a>
+            <a href="./" class="nav-link">Trade Calculator</a>
+            <a href="./use-guide" class="nav-link">Use Guide</a>
         </div>
     </div>
-    <div class="trade-page-container">
-        <!-- WFL B ar -->
+    <div id="calculator-page" class="trade-page-container">
+        <!-- WFL Bar -->
         <div class="wfl-bar-wrapper">
             <div class="wfl-bar-labels">
                 <span>Win</span>
@@ -55,6 +55,13 @@
                 <div class="total-value" id="their-total">Total: 0 fv</div>
             </div>
         </div>
+    </div>
+
+    <!-- New guide page container, initially hidden -->
+    <div id="guide-page" class="guide-page-container" style="display: none;">
+        <!-- Guide content will be loaded here by JS -->
+        <h2>Use Guide</h2>
+        <p>Loading guide...</p>
     </div>
 
     <!-- Item Selection Modal -->

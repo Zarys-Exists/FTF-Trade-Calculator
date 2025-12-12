@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('item-search');
     const resetBtn = document.getElementById('reset-trade-btn');
     const raritySidebar = document.querySelector('.rarity-sidebar');
+    const navLinksContainer = document.querySelector('.nav-links'); // New: nav links container
+    const calculatorPage = document.getElementById('calculator-page'); // New: Calculator content wrapper
+    const guidePage = document.getElementById('guide-page'); // New: Guide content wrapper
+    let guideContentLoaded = false; // New: Flag to track if guide content is loaded
 
     let allItems = [];
     let activeSlot = null;
@@ -66,13 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Create and set up image with corrected path
             const img = document.createElement('img');
-            // Use the original item name and URL-encode it to match filenames on disk
-            const filename = encodeURIComponent(item.name + '.png');
+            // Convert item name to lowercase for consistent image lookup
+            const filename = encodeURIComponent(item.name.toLowerCase() + '.png');
             img.src = 'items/' + filename;
             img.alt = item.name;
-            // Fallback if image fails to load
+            // Fallback if image fails to load, using a lowercase default
             img.onerror = () => {
-                img.src = 'items/' + encodeURIComponent('Default.png');
+                img.src = 'items/' + encodeURIComponent('default.png');
             };
             
             // Create name element
@@ -469,85 +473,86 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDisplayedItems();
     }
 
-    // Event Listeners
-    yourGrid.addEventListener('click', handleSlotClick);
-    theirGrid.addEventListener('click', handleSlotClick);
-    // Quantity controls delegation
-    [yourGrid, theirGrid].forEach(grid => {
-        grid.addEventListener('click', (e) => {
-            const dec = e.target.closest('.qty-decrease');
-            const inc = e.target.closest('.qty-increase');
-            if (!dec && !inc) return;
-            const slot = e.target.closest('.item-slot');
-            if (!slot) return;
-            const input = slot.querySelector('.qty-input');
-            const current = Number(input?.value) || 1;
-            if (dec) setSlotQuantity(slot, current - 1);
-            if (inc) setSlotQuantity(slot, current + 1);
-        });
+    // ROUTER LOGIC
+    async function handleNavigation(path, pushState = true) {
+        // Remove active class from all nav links
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
 
-        grid.addEventListener('input', (e) => {
-            const input = e.target.closest('.qty-input');
-            if (!input) return;
-            const slot = e.target.closest('.item-slot');
-            if (!slot) return;
-            // allow typing but clamp on blur via setSlotQuantity
-            const val = Number(input.value);
-            if (Number.isNaN(val)) return;
-            if (val > 100) input.value = '100';
-            if (val < 1) input.value = '1';
-            setSlotQuantity(slot, input.value);
-        });
-    });
-    
-    closeModalBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', e => {
-        if (e.target === modal) closeModal();
-    });
-    
-    itemList.addEventListener('click', selectItem);
-    searchInput.addEventListener('input', updateDisplayedItems);
-    raritySidebar.addEventListener('click', handleRarityChange);
-    resetBtn.addEventListener('click', resetTrade);
+        // Determine current view and set active class
+        if (path === '/' || path === '/index.html') { // Home page (Trade Calculator)
+            calculatorPage.style.display = 'block';
+            guidePage.style.display = 'none';
+            document.querySelector('.nav-link[href="./"]').classList.add('active');
+            if (pushState) history.pushState({ path: '/' }, '', './'); // Clean URL for home
+        } else if (path === '/use-guide' || path === '/guide.html') { // Use Guide page
+            calculatorPage.style.display = 'none';
+            guidePage.style.display = 'block';
+            document.querySelector('.nav-link[href="./use-guide"]').classList.add('active');
 
-    // FV/HV mode: fv = full values (default), hv = divide displayed values by 40
-    let modeHV = false; // false = fv, true = hv
-
-    function renderFvHvSwitch() {
-        // append switch to trade container (assume .trade-layout parent exists)
-        const tradeLayout = document.querySelector('.trade-layout') || document.body;
-        const wrapper = document.createElement('div');
-        wrapper.className = 'fv-hv-switch';
-        wrapper.innerHTML = `
-            <div class="label">Mode</div>
-            <div class="fv-hv-toggle" id="fv-hv-toggle" title="Toggle FV/HV">
-                <div class="option">fv</div>
-                <div class="option">hv</div>
-                <div class="knob">fv</div>
-            </div>
-        `;
-        tradeLayout.appendChild(wrapper);
-
-        const toggle = wrapper.querySelector('.fv-hv-toggle');
-        const knob = toggle.querySelector('.knob');
-        toggle.addEventListener('click', () => {
-            modeHV = !modeHV;
-            toggle.classList.toggle('hv', modeHV);
-            knob.textContent = modeHV ? 'hv' : 'fv';
-            // recalc and re-render totals
-            calculateAll();
-        });
+            if (!guideContentLoaded) {
+                try {
+                    const response = await fetch('guide.html'); // Fetch the content of guide.html
+                    if (!response.ok) throw new Error('Failed to load guide.html');
+                    const html = await response.text();
+                    
+                    // Extract relevant content from guide.html
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const guideMainContent = doc.querySelector('.guide-page-container'); // Assuming guide.html has a main content container with this class
+                    if (guideMainContent) {
+                        guidePage.innerHTML = guideMainContent.innerHTML;
+                        guideContentLoaded = true;
+                    } else {
+                        guidePage.innerHTML = '<p style="color: red;">Failed to parse guide content.</p>';
+                    }
+                } catch (error) {
+                    console.error("Failed to load guide content:", error);
+                    guidePage.innerHTML = '<p style="color: red;">Could not load guide.</p>';
+                }
+            }
+            if (pushState) history.pushState({ path: '/use-guide' }, '', './use-guide');
+        } else {
+            // Default to home if an unknown path is accessed
+            handleNavigation('/', pushState);
+            return;
+        }
+        // Scroll to top of page on navigation
+        window.scrollTo(0, 0);
     }
 
-    // helper to apply mode adjustment: when in HV, divide displayed numeric values by 40
-    function applyModeToValue(val) {
-        const num = Number(val);
-        if (isNaN(num)) return val;
-        if (!modeHV) return num;
-        // hv mode: divide by 40 and keep full precision
-        return num / 40;
-        // Note: formatting is now handled by formatNumberForDisplay
-    }
+    // Event listener for navigation links
+    navLinksContainer.addEventListener('click', (e) => {
+        const link = e.target.closest('.nav-link');
+        if (link) {
+            e.preventDefault(); // Prevent default link navigation
+            const path = new URL(link.href).pathname.split('/').pop(); // Get 'index.html', 'use-guide', etc.
+            
+            // Adjust path for cleaner routing logic
+            let cleanPath;
+            if (path === '' || path === 'index.html') {
+                cleanPath = '/';
+            } else if (path === 'use-guide') {
+                cleanPath = '/use-guide';
+            } else {
+                cleanPath = path; // Fallback for other paths, though not expected here
+            }
+            handleNavigation(cleanPath);
+        }
+    });
+
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', (e) => {
+        const currentPath = window.location.pathname.split('/').pop();
+        let cleanPath;
+        if (currentPath === '' || currentPath === 'index.html') {
+            cleanPath = '/';
+        } else if (currentPath === 'use-guide') {
+            cleanPath = '/use-guide';
+        } else {
+            cleanPath = currentPath;
+        }
+        handleNavigation(cleanPath, false); // Don't push state again on popstate
+    });
 
     // Initial setup
     createGridSlots(yourGrid);
@@ -555,4 +560,16 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchItems();
     renderFvHvSwitch();
     calculateAll();
+
+    // Initial routing based on current URL
+    const initialPath = window.location.pathname.split('/').pop();
+    let cleanInitialPath;
+    if (initialPath === '' || initialPath === 'index.html') {
+        cleanInitialPath = '/';
+    } else if (initialPath === 'use-guide') {
+        cleanInitialPath = '/use-guide';
+    } else {
+        cleanInitialPath = initialPath;
+    }
+    handleNavigation(cleanInitialPath, true); // Push state initially to ensure clean URL on first load
 });
