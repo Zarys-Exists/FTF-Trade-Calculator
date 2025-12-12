@@ -27,38 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add event listener for SHG buttons
     shgButtons.addEventListener('click', handleSHGChange);
 
-    // Helper: generate filename candidates and try them (case-insensitive matching)
-    function getImageCandidates(name) {
-        const base = name.trim();
-        const variants = new Set();
-        // original
-        variants.add(base + '.png');
-        // lowercase
-        variants.add(base.toLowerCase() + '.png');
-        // title case (each word capitalized)
-        variants.add(base.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') + '.png');
-        // strip punctuation like apostrophes
-        variants.add(base.replace(/["'’]/g, '').toLowerCase() + '.png');
-        // all lower, spaces normalized
-        variants.add(base.replace(/\s+/g, ' ').toLowerCase() + '.png');
-        return Array.from(variants).map(f => encodeURIComponent(f));
-    }
-
-    function loadImageWithFallback(imgEl, name) {
-        const candidates = getImageCandidates(name);
-        let i = 0;
-        const tryNext = () => {
-            if (i >= candidates.length) {
-                imgEl.src = 'items/' + encodeURIComponent('Default.png');
-                return;
-            }
-            const url = 'items/' + candidates[i++];
-            imgEl.onerror = tryNext;
-            imgEl.src = url;
-        };
-        tryNext();
-    }
-
     // Fetch item data
     async function fetchItems() {
         try {
@@ -96,10 +64,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const imgContainer = document.createElement('div');
             imgContainer.className = 'modal-item-img';
             
-            // Create and set up image with case-insensitive matching
+            // Create and set up image with corrected path
             const img = document.createElement('img');
+            // Use the original item name and URL-encode it to match filenames on disk
+            const filename = encodeURIComponent(item.name + '.png');
+            img.src = 'items/' + filename;
             img.alt = item.name;
-            loadImageWithFallback(img, item.name);
+            // Fallback if image fails to load
+            img.onerror = () => {
+                img.src = 'items/' + encodeURIComponent('Default.png');
+            };
             
             // Create name element
             const nameEl = document.createElement('div');

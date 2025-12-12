@@ -27,33 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add event listener for SHG buttons
     shgButtons.addEventListener('click', handleSHGChange);
 
-    // Helper: generate filename candidates and try them (case-insensitive matching)
-    function getImageCandidates(name) {
-        const base = name.trim();
-        const variants = new Set();
-        variants.add(base + '.png');
-        variants.add(base.toLowerCase() + '.png');
-        variants.add(base.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') + '.png');
-        variants.add(base.replace(/["'’]/g, '').toLowerCase() + '.png');
-        variants.add(base.replace(/\s+/g, ' ').toLowerCase() + '.png');
-        return Array.from(variants).map(f => encodeURIComponent(f));
-    }
-
-    function loadImageWithFallback(imgEl, name) {
-        const candidates = getImageCandidates(name);
-        let i = 0;
-        const tryNext = () => {
-            if (i >= candidates.length) {
-                imgEl.src = 'items/' + encodeURIComponent('Default.png');
-                return;
-            }
-            const url = 'items/' + candidates[i++];
-            imgEl.onerror = tryNext;
-            imgEl.src = url;
-        };
-        tryNext();
-    }
-
     // Fetch item data
     async function fetchItems() {
         try {
@@ -91,10 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const imgContainer = document.createElement('div');
             imgContainer.className = 'modal-item-img';
             
-            // Create and set up image with case-insensitive matching
+            // Create and set up image with corrected path
             const img = document.createElement('img');
+            img.src = `/items/${item.name.toLowerCase().replace(/\s+/g, ' ')}.png`;
             img.alt = item.name;
-            loadImageWithFallback(img, item.name);
+            // Fallback if image fails to load
+            img.onerror = () => {
+                img.src = '/items/default.png';
+            };
             
             // Create name element
             const nameEl = document.createElement('div');
