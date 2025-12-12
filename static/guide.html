@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTF Calculator - Guide</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="site-header">
+        <h1 class="site-title">Zarys' FTF Calculator</h1>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Trade Calculator</a>
+            <a href="guide.html" class="nav-link active">Use Guide</a>
+        </div>
+    </div>
+    <div class="guide-content">
+        <section class="guide-section">
+            <h2>Introduction</h2>
+            <p>This site is a basic trade calculator to check the value of your potential FTF trades. It's useful for those who 
+                either do not have a good grasp of values or those who would like to speed up their trade calculations. 
+                Read the instructions below to understand its features and nuances. Despite my best efforts, 
+                it may not be entirely intuitive—any feedback is welcome and appreciated.</p>
+        </section>
+
+        <section class="guide-section">
+            <h2>Use Guide</h2>
+            <p>I will not be going over the simple aspects of the site (click the item and it gets added, yay!). 
+                Instead, I will explain the more unintuitive aspects:</p>
+            
+            <ul class="guide-list">
+                <li>
+                    <strong>Value Source:</strong> All values displayed on this site come from the <a href="https://ftf-values.com" target="_blank" rel="noopener noreferrer">official FTF values website</a> 
+                    and are updated shortly after each value list update. However, the site does not account for demand, 
+                    so do not blindly accept every trade that is said to be a win.
+                </li>
+                <li>
+                    <strong>Set/Broken:</strong> Items are by default added to the calculator as a set and will have 
+                    the set value as per the value list. This can be changed by clicking the 'H' or 'G' button while choosing the item, 
+                    which will make the site consider it as a hammer or gem respectively and show the appropriate value.
+                </li>
+                <li>
+                    <strong>H/G ratio:</strong> The value of a broken (h/g) item is dependent on a few factors, 
+                    including its rarity. For legendaries, the value of a set is split as 70% to the hammer and 30% to the gem. 
+                    For seasonals, it's 50/50. However, there is an exception for sets with neon gems (aurora, cherry pie, etc.), 
+                    in which case the ratio is instead 20/80 for hammer/gem respectively.
+                </li>
+                <li>
+                    <strong>Quantity Limit:</strong> The quantity of a single item is capped at 100. However, you can add the 
+                    same item in the next slot if you need more than that.
+                </li>
+                <li>
+                    <strong>Unit Switching:</strong> You can switch between the old (HV) and new (FV) units of value through the toggle
+                    at the bottom right of the calculator. 1 HV = 40 FV
+                </li>
+                <li>
+                    <strong>Trade Value:</strong> The total value you're offering in a trade is displayed at the top left, 
+                    and the value given by the other trader is displayed at the top right. The difference between both values is given in the middle.
+                </li>
+            </ul>
+
+        </section>
+    </div>
+</body>
+</html>
