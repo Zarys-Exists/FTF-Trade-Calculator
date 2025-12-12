@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch item data
     async function fetchItems() {
         try {
-            const response = await fetch('../ftf_items.json'); // Changed path to go up one level
+            const response = await fetch('ftf_items.json');
             const data = await response.json();
             allItems = data.items;
             updateDisplayedItems();
