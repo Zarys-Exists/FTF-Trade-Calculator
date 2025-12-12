@@ -30,13 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch item data
     async function fetchItems() {
         try {
-            const response = await fetch('/ftf_items.json');
+            const response = await fetch('ftf_items.json');
             const data = await response.json();
             allItems = data.items;
             updateDisplayedItems();
             // load exceptions
             try {
-                const exResp = await fetch('/shg_exceptions.json');
+                const exResp = await fetch('shg_exceptions.json');
                 const exData = await exResp.json();
                 if (Array.isArray(exData.exceptions_80_20)) {
                     shgExceptions8020 = new Set(exData.exceptions_80_20.map(s => s.toLowerCase()));
@@ -66,11 +66,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Create and set up image with corrected path
             const img = document.createElement('img');
-            img.src = `/items/${item.name.toLowerCase().replace(/\s+/g, ' ')}.png`;
+            // Use the original item name and URL-encode it to match filenames on disk
+            const filename = encodeURIComponent(item.name + '.png');
+            img.src = 'items/' + filename;
             img.alt = item.name;
             // Fallback if image fails to load
             img.onerror = () => {
-                img.src = '/items/default.png';
+                img.src = 'items/' + encodeURIComponent('Default.png');
             };
             
             // Create name element
