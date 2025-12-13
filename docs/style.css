@@ -10,6 +10,18 @@ button, input[type="button"], input[type="submit"], a {
     -webkit-tap-highlight-color: transparent;
 }
 
+button:focus, button:active,
+input:focus, input:active,
+a:focus, a:active,
+.item-slot:focus, .item-slot:active,
+.rarity-filter-btn:focus, .rarity-filter-btn:active,
+.shg-btn:focus, .shg-btn:active,
+.fv-hv-toggle:focus, .fv-hv-toggle:active,
+#reset-trade-btn:focus, #reset-trade-btn:active {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
 html {
     overflow-x: hidden;
     background: linear-gradient(135deg, #27004a 0%, #1a0033 100%);
