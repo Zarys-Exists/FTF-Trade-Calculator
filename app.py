@@ -20,23 +20,23 @@ logger = logging.getLogger(__name__)
 werkzeug_logger = logging.getLogger('werkzeug')
 werkzeug_logger.disabled = True
 
-# Create Flask app pointing to the static folder
-app = Flask(__name__, static_folder='static', static_url_path='')
+# Create Flask app pointing to the docs folder
+app = Flask(__name__, static_folder='docs', static_url_path='')
 
 # Serve index.html as the main page
 @app.route('/')
 def index():
-    return send_from_directory('static', 'index.html')
+    return send_from_directory('docs', 'index.html')
 
 # Serve ftf_items.json for item data
 @app.route('/ftf_items.json')
 def serve_items():
-    return send_from_directory('.', 'ftf_items.json')
+    return send_from_directory('docs', 'ftf_items.json')
 
-# Serve any other static files (CSS, JS, images)
+# Serve any other docs files (CSS, JS, images)
 @app.route('/<path:path>')
-def serve_static(path):
-    return send_from_directory('static', path)
+def serve_docs(path):
+    return send_from_directory('docs', path)
 
 if __name__ == '__main__':
     logger.info("Starting Trade Calculator at http://127.0.0.1:5000")
