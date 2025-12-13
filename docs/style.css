@@ -5,6 +5,11 @@
     box-sizing: border-box;
 }
 
+button, input[type="button"], input[type="submit"], a {
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
 html {
     overflow-x: hidden;
     background: linear-gradient(135deg, #27004a 0%, #1a0033 100%);
