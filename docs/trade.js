@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="qty-control" data-name="${name}">
                         <button class="qty-btn qty-decrease" type="button" aria-label="Decrease quantity">−</button>
-                        <input class="qty-input" type="number" min="1" max="100" step="1" value="1" aria-label="Quantity">
+                        <input class="qty-input" type="number" max="100" step="1" value="1" aria-label="Quantity">
                         <button class="qty-btn qty-increase" type="button" aria-label="Increase quantity">+</button>
                     </div>
                 </div>
@@ -491,12 +491,40 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!input) return;
             const slot = e.target.closest('.item-slot');
             if (!slot) return;
-            // allow typing but clamp on blur via setSlotQuantity
+            // allow empty input and typing, clamp upper bound
             const val = Number(input.value);
+            if (input.value === '') return; // allow clearing
             if (Number.isNaN(val)) return;
             if (val > 100) input.value = '100';
-            if (val < 1) input.value = '1';
+            if (val > 0) setSlotQuantity(slot, input.value);
+        });
+
+        grid.addEventListener('blur', (e) => {
+            const input = e.target.closest('.qty-input');
+            if (!input) return;
+            const slot = e.target.closest('.item-slot');
+            if (!slot) return;
+            // Reset to 1 if empty on blur
+            if (input.value === '' || Number(input.value) < 1) {
+                input.value = '1';
+                setSlotQuantity(slot, 1);
+            }
+        }, true); // use capture phase to ensure blur is caught
+
+        grid.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            const input = e.target.closest('.qty-input');
+            if (!input) return;
+            const slot = e.target.closest('.item-slot');
+            if (!slot) return;
+            // Reset to 1 if empty or 0
+            if (input.value === '' || Number(input.value) < 1) {
+                input.value = '1';
+            }
+            // Explicitly update the quantity
             setSlotQuantity(slot, input.value);
+            // Blur to complete editing
+            input.blur();
         });
     });
     
