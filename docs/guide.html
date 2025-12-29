@@ -35,13 +35,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-theme');
+        }
+    </script>
 </head>
 <body>
     <div class="site-header">
-        <h1 class="site-title">Zarys' FTF Calculator</h1>
+        <h1 class="site-title">Zarys's FTF Calculator</h1>
         <div class="nav-links">
             <a href="./" class="nav-link">Trade Calculator</a>
             <a href="guide.html" class="nav-link active">Use Guide</a>
+            <button id="theme-toggle" class="theme-toggle" title="Toggle Dark Theme">Dark Mode</button>
         </div>
     </div>
     <div class="guide-content">
@@ -93,5 +100,6 @@
 
         </section>
     </div>
+    <script src="trade.js"></script>
 </body>
 </html>

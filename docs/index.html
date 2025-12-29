@@ -6,7 +6,7 @@
     <title>FTF Trade Calculator</title>
     <meta name="description" content="FTF trade calculator shows you whether your flee the facility 
     trades are fair, wins, or losses. It is easy to navigate, includes values for every item, and uses the official value list">
-    <meta name="keywords" content="FTF, Flee The Facility, ftf trade calculator, Zarys' FTF calculator, ftf value list, zarys calculator">
+    <meta name="keywords" content="FTF, Flee The Facility, ftf trade calculator, Zarys's FTF calculator, ftf value list, zarys calculator">
     <meta name="author" content="Zarys">
     <meta name="robots" content="index, follow">
     
@@ -35,13 +35,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark-theme');
+        }
+    </script>
 </head>
 <body>
     <div class="site-header">
-        <h1 class="site-title">Zarys' FTF Calculator</h1>
+        <h1 class="site-title">Zarys's FTF Calculator</h1>
         <div class="nav-links">
             <a href="./" class="nav-link active">Trade Calculator</a>
             <a href="guide.html" class="nav-link">Use Guide</a>
+            <button id="theme-toggle" class="theme-toggle" title="Toggle Dark Theme">Dark Mode</button>
         </div>
     </div>
     <div class="trade-page-container">

@@ -1,4 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Dark theme toggle functionality
+    const themeToggle = document.getElementById('theme-toggle');
+    const htmlElement = document.documentElement;
+    
+    // Load theme preference from localStorage
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        htmlElement.classList.add('dark-theme');
+        themeToggle.textContent = 'Light Mode';
+    }
+    
+    // Theme toggle event listener
+    themeToggle.addEventListener('click', () => {
+        htmlElement.classList.toggle('dark-theme');
+        
+        if (htmlElement.classList.contains('dark-theme')) {
+            localStorage.setItem('theme', 'dark');
+            themeToggle.textContent = 'Light Mode';
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeToggle.textContent = 'Dark Mode';
+        }
+    });
+    
     const yourGrid = document.getElementById('your-offer-grid');
     const theirGrid = document.getElementById('their-offer-grid');
     const modal = document.getElementById('item-modal');
