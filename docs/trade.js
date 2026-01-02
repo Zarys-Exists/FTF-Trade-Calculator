@@ -362,13 +362,13 @@ document.addEventListener('DOMContentLoaded', () => {
             resultEl.textContent = 'Fair';
             resultEl.classList.add('wfl-result-fair');
         } else if (difference > 0) {
-            const winAmt = modeHV ? formatDisplayValue(theirValue-yourValue) : (theirValue-yourValue);
+            const winAmt = modeHV ? formatDisplayValue(theirValue-yourValue) : formatNumberForDisplay(computeAdjustedValue(1, theirValue-yourValue));
             const modeLabel = modeHV ? 'hv' : 'fv';
             // amount on first line, mode + Win on second line
             resultEl.innerHTML = `${winAmt}<br><span class="wfl-mode">${modeLabel} Win</span>`;
             resultEl.classList.add('wfl-result-win');
         } else {
-            const lossAmt = modeHV ? formatDisplayValue(yourValue-theirValue) : (yourValue-theirValue);
+            const lossAmt = modeHV ? formatDisplayValue(yourValue-theirValue) : formatNumberForDisplay(computeAdjustedValue(1, yourValue-theirValue));
             const modeLabel = modeHV ? 'hv' : 'fv';
             // amount on first line, mode + Loss on second line
             resultEl.innerHTML = `${lossAmt}<br><span class="wfl-mode">${modeLabel} Loss</span>`;

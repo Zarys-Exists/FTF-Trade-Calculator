@@ -1,6 +1,7 @@
 from flask import Flask, send_from_directory
 import logging
 import os
+from pathlib import Path
 
 # Configure logging
 root_logger = logging.getLogger()
@@ -20,23 +21,26 @@ logger = logging.getLogger(__name__)
 werkzeug_logger = logging.getLogger('werkzeug')
 werkzeug_logger.disabled = True
 
+# Point to docs folder (parent directory)
+docs_folder = Path(__file__).parent.parent / "docs"
+
 # Create Flask app pointing to the docs folder
-app = Flask(__name__, static_folder='docs', static_url_path='')
+app = Flask(__name__, static_folder=str(docs_folder), static_url_path='')
 
 # Serve index.html as the main page
 @app.route('/')
 def index():
-    return send_from_directory('docs', 'index.html')
+    return send_from_directory(docs_folder, 'index.html')
 
 # Serve ftf_items.json for item data
 @app.route('/ftf_items.json')
 def serve_items():
-    return send_from_directory('docs', 'ftf_items.json')
+    return send_from_directory(docs_folder, 'ftf_items.json')
 
 # Serve any other docs files (CSS, JS, images)
 @app.route('/<path:path>')
 def serve_docs(path):
-    return send_from_directory('docs', path)
+    return send_from_directory(docs_folder, path)
 
 if __name__ == '__main__':
     logger.info("Starting Trade Calculator at http://127.0.0.1:5000")
