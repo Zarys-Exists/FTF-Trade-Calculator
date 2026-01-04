@@ -291,7 +291,6 @@ body {
 .trade-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
     gap: 0.25rem;
     width: 100%;
     min-width: 8rem;
@@ -301,6 +300,25 @@ body {
     border-radius: 0.5rem;
     border: 2px solid var(--border-color);
     margin-top: 1rem;
+    /* Added scrolling logic */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+}
+
+.trade-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.trade-grid::-webkit-scrollbar-track {
+    background: var(--scrollbar-bg);
+    border-radius: 4px;
+}
+
+.trade-grid::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 4px;
 }
 
 .item-slot {
@@ -315,6 +333,7 @@ body {
     color: var(--color-text);
     padding: 0.25rem;
     position: relative;
+    aspect-ratio: 1 / 1; /* <-- ADDED: Keeps slots square */
 }
 
 .item-slot[data-shg="h"]::before,
@@ -1615,4 +1634,3 @@ html.dark-theme .guide-section {
     font-weight: 500;
     box-shadow: var(--focus-shadow);
 }
-

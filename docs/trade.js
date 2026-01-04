@@ -136,10 +136,10 @@ document.addEventListener('DOMContentLoaded', () => {
         populateItemList(filteredItems);
     }
 
-    // Create the 9 slots for a grid
+    // Create the slots for a grid
     function createGridSlots(gridElement) {
         gridElement.innerHTML = '';
-        for (let i = 0; i < 9; i++) {
+        for (let i = 0; i < 27; i++) {
             const slot = document.createElement('div');
             slot.classList.add('item-slot');
             slot.dataset.value = 0;
@@ -412,6 +412,21 @@ document.addEventListener('DOMContentLoaded', () => {
         createGridSlots(theirGrid);
         calculateAll();
     }
+
+    // Scroll grids to the top
+    function scrollGridsToTop() {
+        yourGrid.scrollTop = 0;
+        theirGrid.scrollTop = 0;
+    }
+
+    // Ensure grids scroll to the top on reset
+    resetBtn.addEventListener('click', () => {
+        scrollGridsToTop();
+        resetTrade(); // Call the existing reset logic
+    });
+
+    // Scroll grids to the top on page load
+    scrollGridsToTop();
 
     // Handle clicks on filled slots to remove items
     function handleSlotClick(e) {
