@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 werkzeug_logger = logging.getLogger('werkzeug')
 werkzeug_logger.disabled = True
 
-# Point to docs folder (parent directory)
-docs_folder = Path(__file__).parent.parent / "docs"
+# Point to docs folder (parent directory) - use absolute path for reliability
+docs_folder = Path(__file__).resolve().parent.parent / "docs"
 
 # Create Flask app pointing to the docs folder
 app = Flask(__name__, static_folder=str(docs_folder), static_url_path='')

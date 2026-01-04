@@ -32,7 +32,16 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
     <link rel="apple-touch-icon" href="favicon/apple-touch-icon.png">
     <link rel="manifest" href="favicon/site.webmanifest">
-    <base href="/FTF-Trade-Calculator/">
+    <script>
+        // Set base href dynamically - use the path for GitHub Pages, root for local dev
+        const base = document.createElement('base');
+        if (!location.hostname.includes('localhost') && !location.hostname.includes('127.0.0.1')) {
+            base.href = '/FTF-Trade-Calculator/';
+        } else {
+            base.href = '/';
+        }
+        document.head.appendChild(base);
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -53,7 +62,7 @@
         </div>
     </div>
     <div class="trade-page-container">
-        <!-- WFL B ar -->
+        <!-- WFL Bar -->
         <div class="wfl-bar-wrapper">
             <div class="wfl-bar-labels">
                 <span>Win</span>
