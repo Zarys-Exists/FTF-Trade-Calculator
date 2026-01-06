@@ -153,7 +153,7 @@
         {"name": "Fungal Thumper","value": 5,"rarity": "Legendary","demand": 1,"stability": "Stable","rank": 151},
         {"name": "Shroomy Smasher","value": 5,"rarity": "Legendary","demand": 1,"stability": "Stable","rank": 152},
         {"name": "2024","value": 5,"rarity": "Legendary","demand": 1,"stability": "Stable","rank": 153},
-        {"name": "2025","value": 4,"rarity": "Legendary","demand": 1,"stability": "Fluctuating","rank": 154},
+        {"name": "2025","value": 4,"rarity": "Legendary","demand": 1,"stability": "Stable","rank": 154},
         {"name": "Fairy Tale Book","value": 4,"rarity": "Legendary","demand": 1,"stability": "Stable","rank": 155},
         {"name": "Irish Harp","value": 4,"rarity": "Legendary","demand": 1,"stability": "Stable","rank": 156},
         {"name": "Ancient Portal","value": 4,"rarity": "Legendary","demand": 1,"stability": "Stable","rank": 157},
