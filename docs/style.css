@@ -291,6 +291,7 @@ body {
 .trade-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 1fr;
     gap: 0.25rem;
     width: 100%;
     min-width: 8rem;
@@ -368,6 +369,7 @@ body {
     gap: 0.15rem;
     overflow: hidden;
     padding-bottom: 0.2rem;
+    position: relative;
 }
 
 .item-slot-img {
@@ -395,6 +397,26 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.item-slot.filled[data-stability="doing-well"] {
+    border-color: #02f7b2;
+}
+
+.item-slot.filled[data-stability="dropping"] {
+    border-color: #ff0000;
+}
+
+.item-slot.filled[data-stability="struggling"] {
+    border-color: #f2ff00;
+}
+
+.item-slot.filled[data-stability="fluctuating"] {
+    border-color: #00ff3c;
+}
+
+.item-slot.filled[data-stability="receding"] {
+    border-color: #ffa200;
 }
 
 .single-line {

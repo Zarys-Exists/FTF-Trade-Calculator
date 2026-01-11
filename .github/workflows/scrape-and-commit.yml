@@ -52,6 +52,6 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add docs/ftf_items.json
-          git commit -m "Update ftf_items.json with latest scrape data [skip ci]"
+          git commit -m "value list update"
           git push
           

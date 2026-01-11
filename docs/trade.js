@@ -104,6 +104,11 @@ document.addEventListener('DOMContentLoaded', () => {
             nameEl.className = 'modal-item-name';
             nameEl.textContent = item.name;
             
+            // Create stability element
+            const stabilityEl = document.createElement('div');
+            stabilityEl.className = 'modal-item-stability';
+            stabilityEl.textContent = item.stability;
+            
             // Assemble elements
             imgContainer.appendChild(img);
             itemEl.appendChild(imgContainer);
@@ -111,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             itemEl.dataset.name = item.name;
             itemEl.dataset.value = item.value;
+            itemEl.dataset.stability = item.stability;
             // store rarity so we can apply modifier rules later
             if (item.rarity) itemEl.dataset.rarity = item.rarity;
             itemList.appendChild(itemEl);
@@ -186,7 +192,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const name = modalItem.dataset.name;
                 const value = modalItem.dataset.value;
                 const rarity = (modalItem.dataset.rarity || '').toLowerCase();
-            const imgSrc = modalItem.querySelector('img').src;
+                const stability = modalItem.dataset.stability;
+                const imgSrc = modalItem.querySelector('img').src;
+            
 
             // compute displayed value based on rarity and current modifier
             let baseVal = Number(value) || 0;
@@ -222,6 +230,31 @@ document.addEventListener('DOMContentLoaded', () => {
             activeSlot.dataset.value = String(displayedValue);
             // default quantity
             activeSlot.dataset.quantity = '1';
+            
+            // Determine stability type for border styling
+            let stabilityType = '';
+            if (stability) {
+                const stabilityLower = stability.toLowerCase();
+                if (stabilityLower.includes('doing well')) {
+                    stabilityType = 'doing-well';
+                } else if (stabilityLower.includes('dropping')) {
+                    stabilityType = 'dropping';
+                } else if (stabilityLower.includes('struggling')) {
+                    stabilityType = 'struggling';
+                } else if (stabilityLower.includes('fluctuating')) {
+                    stabilityType = 'fluctuating';
+                } else if (stabilityLower.includes('receding')) {
+                    stabilityType = 'receding';
+                }
+            }
+            
+            // Store stability type on the slot for border styling
+            if (stabilityType && stability.toLowerCase() !== 'stable') {
+                activeSlot.dataset.stability = stabilityType;
+            } else {
+                delete activeSlot.dataset.stability;
+            }
+            
             // Now render inner HTML with the computed displayed value and quantity control
             activeSlot.innerHTML = `
                 <div class="item-slot-content">
@@ -236,6 +269,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             activeSlot.classList.add('filled');
+            
+            // Store stability type on the slot for border styling
+            if (stabilityType && stability.toLowerCase() !== 'stable') {
+                activeSlot.dataset.stability = stabilityType;
+            } else {
+                delete activeSlot.dataset.stability;
+            }
             
             // Add SHG indicator if a modifier (h or g only) is selected
             if (currentSHG && (currentSHG === 'h' || currentSHG === 'g')) {
