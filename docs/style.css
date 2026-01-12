@@ -277,7 +277,8 @@ body {
 }
 
 .offer-container {
-    flex: 1;
+    flex: 1 1 0; /* Updated: Allows containers to shrink equally */
+    min-width: 0; /* Updated: Prevents flex items from overflowing horizontally */
     display: flex;
     color: var(--color-text);
     flex-direction: column;
@@ -285,23 +286,21 @@ body {
     position: relative;
     min-height: 25rem;
     width: 100%;
-    max-width: 20rem;
 }
 
 .trade-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: 1fr;
+    grid-template-rows: repeat(3, 1fr); /* Updated: Locks visible area to 3x3 */
+    grid-auto-rows: 1fr; /* Updated: Ensures hidden slots maintain size */
     gap: 0.25rem;
-    width: 100%;
-    min-width: 8rem;
+    width: 100%; /* Updated: Fits to parent */
     max-width: 22rem;
     aspect-ratio: 1 / 1;
     background-color: var(--bg-light);
     border-radius: 0.5rem;
     border: 2px solid var(--border-color);
     margin-top: 1rem;
-    /* Added scrolling logic */
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
@@ -334,7 +333,7 @@ body {
     color: var(--color-text);
     padding: 0.25rem;
     position: relative;
-    aspect-ratio: 1 / 1; /* <-- ADDED: Keeps slots square */
+    aspect-ratio: 1 / 1;
 }
 
 .item-slot[data-shg="h"]::before,
@@ -374,7 +373,7 @@ body {
 
 .item-slot-img {
     width: 92%;
-    height: 86%;
+    height: 86%; /* Constrains image height */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -386,6 +385,7 @@ body {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+    display: block;
 }
 
 .item-slot-name {
@@ -399,22 +399,19 @@ body {
     text-overflow: ellipsis;
 }
 
+/* Stability Border Indicators */
 .item-slot.filled[data-stability="doing-well"] {
     border-color: #02f7b2;
 }
-
 .item-slot.filled[data-stability="dropping"] {
     border-color: #ff0000;
 }
-
 .item-slot.filled[data-stability="struggling"] {
     border-color: #f2ff00;
 }
-
 .item-slot.filled[data-stability="fluctuating"] {
     border-color: #00ff3c;
 }
-
 .item-slot.filled[data-stability="receding"] {
     border-color: #ffa200;
 }
@@ -1091,7 +1088,6 @@ html.dark-theme .guide-section {
 
     .offer-container {
         min-height: auto;
-        max-width: none;
         width: 100%;
         flex: 1;
     }
@@ -1508,7 +1504,6 @@ html.dark-theme .guide-section {
 
     .offer-container {
         min-height: auto;
-        max-width: none;
         flex: 0 1 100%;
     }
 
@@ -1636,6 +1631,21 @@ html.dark-theme .guide-section {
 
     .modal-item-name {
         font-size: 0.65rem;
+    }
+}
+
+/* Wide screens with sufficient height */
+@media screen and (min-width: 59.1rem) and (min-height: 37.1rem) {
+    .trade-page-container {
+        height: auto;
+        min-height: auto;
+        padding-bottom: 4rem;
+    }
+
+    .fv-hv-switch {
+        position: absolute;
+        right: 1rem;
+        bottom: -3rem;
     }
 }
 
