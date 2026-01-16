@@ -73,7 +73,7 @@
         {"name": "Ancient Trident","value": 18,"rarity": "Legendary","demand": 3,"stability": "Stable","rank": 71},
         {"name": "Ancestral Trident","value": 18,"rarity": "Legendary","demand": 3,"stability": "Stable","rank": 72},
         {"name": "Lilium Bush","value": 16,"rarity": "Legendary","demand": 3,"stability": "Stable","rank": 73},
-        {"name": "Fortune House","value": 18,"rarity": "Legendary","demand": 2,"stability": "Stable","rank": 74},
+        {"name": "Fortune House","value": 16,"rarity": "Legendary","demand": 2,"stability": "Stable","rank": 74},
         {"name": "2nd Anniversary","value": 16,"rarity": "Legendary","demand": 2,"stability": "Stable ➖","rank": 75},
         {"name": "Lucky Top Hat","value": 14,"rarity": "Legendary","demand": 2,"stability": "Stable","rank": 76},
         {"name": "Fish Tank","value": 14,"rarity": "Legendary","demand": 2,"stability": "Stable","rank": 77},
