@@ -10,16 +10,29 @@ button, input[type="button"], input[type="submit"], a {
     -webkit-tap-highlight-color: transparent;
 }
 
-button:focus, button:active,
-input:focus, input:active,
-a:focus, a:active,
-.item-slot:focus, .item-slot:active,
-.rarity-filter-btn:focus, .rarity-filter-btn:active,
-.shg-btn:focus, .shg-btn:active,
-.fv-hv-toggle:focus, .fv-hv-toggle:active,
-#reset-trade-btn:focus, #reset-trade-btn:active {
-    outline: none !important;
-    -webkit-tap-highlight-color: transparent !important;
+/* Accessibility: Provide visible focus indicators instead of removing them */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible,
+.item-slot:focus-visible,
+.rarity-filter-btn:focus-visible,
+.shg-btn:focus-visible,
+.fv-hv-toggle:focus-visible,
+#reset-trade-btn:focus-visible {
+    outline: 2px solid var(--focus-shadow);
+    outline-offset: 2px;
+}
+
+/* Remove tap highlight on mobile but keep focus for keyboard */
+button, input[type="button"], input[type="submit"], a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Remove outline for mouse clicks but keep for keyboard */
+button:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+    outline: none;
 }
 
 /* CSS Custom Properties - Purple Theme */
@@ -154,25 +167,7 @@ body {
     box-shadow: var(--focus-shadow);
 }
 
-.container-wrapper {
-    width: 95%;
-    justify-content: space-between;
-    align-items: flex-start;
-    display: flex;
-    gap: 2rem;
-    position: relative;
-    overflow:visible;
-    padding: 0 2rem;
-    max-width: 1400px;
-}
-
-.second-container.show ~ .container,
-.second-container.show {
-    width: calc(48% - 1rem);
-    height: calc(90vh - 140px);
-    min-height: 450px;
-    transition: all 0.3s ease;
-}
+/* Removed unused .container-wrapper and .second-container styles */
 
 .trade-page-container {
     background: var(--bg-container);
@@ -369,6 +364,9 @@ body {
     overflow: hidden;
     padding-bottom: 0.2rem;
     position: relative;
+    /* Safari fix: prevent content from expanding parent */
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .item-slot-img {
@@ -379,6 +377,9 @@ body {
     justify-content: center;
     position: relative;
     z-index: 1;
+    /* Safari fix: strict size constraints */
+    flex-shrink: 1;
+    min-height: 0;
 }
 
 .item-slot-img img {
@@ -429,6 +430,14 @@ body {
 .item-slot.filled {
     border: 1px solid var(--color-primary);
     font-weight: 500;
+    .item-slot.filled {
+        border: 1px solid var(--color-primary);
+        font-weight: 500;
+        /* Force filled slots to stay within bounds */
+        max-width: 100%;
+        max-height: 100%;
+        overflow: hidden;
+    }
 }
 
 .qty-control {
@@ -485,8 +494,11 @@ body {
 }
 
 .qty-input:focus {
-    outline: 2px solid rgba(138,43,226,0.45);
-    border-radius: 6px;
+    outline: none;
+}
+
+.qty-input:focus-visible {
+    outline: none;
 }
 
 .qty-input::-webkit-outer-spin-button,
@@ -789,9 +801,10 @@ body {
     outline: none;
 }
 
-#item-search:focus {
+#item-search:focus-visible {
     border-color: var(--color-primary);
     box-shadow: 0 0 0 2px var(--focus-shadow);
+    outline: none;
 }
 
 .item-list {
@@ -1003,12 +1016,6 @@ html.dark-theme .guide-section {
 /* All elements scale proportionally based on viewport width */
 /* Tablet and below */
 @media screen and (max-width: 68rem) {
-    .container-wrapper {
-        width: 98%;
-        padding: 0 1rem;
-        gap: 1rem;
-    }
-
     .site-header {
         border-bottom: 1px solid var(--color-primary);
     }
