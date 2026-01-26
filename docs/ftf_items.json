@@ -147,7 +147,7 @@
 {"name": "Scarlet Firework", "value": 5, "rarity": "Legendary", "demand": 1, "stability": "Stable", "rank": 149},
 {"name": "Frostbite", "value": 5, "rarity": "Legendary", "demand": 1, "stability": "Stable", "rank": 150},
 {"name": "Frozen Fortress", "value": 5, "rarity": "Legendary", "demand": 1, "stability": "Stable", "rank": 151},
-{"name": "Fairy Tale Book", "value": 4, "rarity": "Legendary", "demand": 1, "stability": "Stable", "rank": 151},
+{"name": "Fairy Tale Book", "value": 5, "rarity": "Legendary", "demand": 1, "stability": "Stable", "rank": 151},
 {"name": "Frosted Frequency", "value": 5, "rarity": "Legendary", "demand": 1, "stability": "Stable", "rank": 152},
 {"name": "Elf Box", "value": 5, "rarity": "Legendary", "demand": 1, "stability": "Stable", "rank": 153},
 {"name": "Santa Box", "value": 5, "rarity": "Legendary", "demand": 1, "stability": "Stable", "rank": 154},
