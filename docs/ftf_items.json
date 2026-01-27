@@ -210,7 +210,7 @@
 {"name": "Fall Foliage", "value": 8, "rarity": "Epic", "demand": 2, "stability": "Stable", "rank": 32},
 {"name": "Sour Snowcone", "value": 8, "rarity": "Epic", "demand": 2, "stability": "Stable", "rank": 33},
 {"name": "Sweet Snowcone", "value": 8, "rarity": "Epic", "demand": 2, "stability": "Stable", "rank": 34},
-{"name": "Veggie Eater Gopher", "value": 7, "rarity": "Epic", "demand": 2, "stability": "Stable", "rank": 34},
+{"name": "Veggie Eater Gopher", "value": 8, "rarity": "Epic", "demand": 2, "stability": "Stable", "rank": 34},
 {"name": "Frankenstein's Brain Jar", "value": 6, "rarity": "Epic", "demand": 2, "stability": "Stable", "rank": 36},
 {"name": "Joyful Mailbox", "value": 5, "rarity": "Epic", "demand": 2, "stability": "Stable", "rank": 36},
 {"name": "Forbidden Fortress", "value": 6, "rarity": "Epic", "demand": 2, "stability": "Stable", "rank": 37},
