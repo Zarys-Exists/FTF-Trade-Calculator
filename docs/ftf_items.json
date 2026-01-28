@@ -69,7 +69,7 @@
         {"name": "Holiday Hotline","value": 20,"rarity": "Legendary","demand": 1.5,"stability": "struggling","rank": 67},
         {"name": "Magical Portal","value": 20,"rarity": "Legendary","demand": 1.5,"stability": "struggling","rank": 68},
         {"name": "Mystical Trident","value": 20,"rarity": "Legendary","demand": 1.5,"stability": "stable","rank": 69},
-        {"name": "Santa Boot","value": 20,"rarity": "Legendary","demand": 1.5,"stability": "stable","rank": 70},
+        {"name": "Santa Boot","value": 20,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 70},
         {"name": "Doomthrust","value": 15,"rarity": "Legendary","demand": 1.5,"stability": "struggling","rank": 71},
         {"name": "Fish Tank","value": 15,"rarity": "Legendary","demand": 1.0,"stability": "stable","rank": 72},
         {"name": "Fortune House","value": 15,"rarity": "Legendary","demand": 1.0,"stability": "stable","rank": 73},
