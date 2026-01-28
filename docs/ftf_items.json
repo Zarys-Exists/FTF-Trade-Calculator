@@ -422,6 +422,5 @@
         {"name": "Winter Wind","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 103},
         {"name": "Winterly Night","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 104},
         {"name": "Yeti","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 105}
-    ],
-    "last_updated": "2026-01-28T19:06:22.054731"
+    ]
 }
