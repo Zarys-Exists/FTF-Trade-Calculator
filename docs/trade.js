@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (yourTotalEl) yourTotalEl.textContent = `${yourTradeDisplay}${yourAddsDisplay} ${modeLabel}`;
         if (theirTotalEl) theirTotalEl.textContent = `${theirTradeDisplay}${theirAddsDisplay} ${modeLabel}`;
-        updateWFL(yourTotal, theirTotal);
+        updateWFL(yourTradeValue, theirTradeValue, yourAddsValue, theirAddsValue);
     }
 
     function updateAll() {
@@ -317,14 +317,23 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTotalsOnly();
     }
 
-    function updateWFL(yourVal, theirVal) {
+    function updateWFL(yourTradeVal, theirTradeVal, yourAddsVal, theirAddsVal) {
         const resultEl = document.getElementById('wfl-result');
         const fillBar = document.getElementById('wfl-bar-fill');
-        const diff = theirVal - yourVal;
+        
+        // Only trade value gets HV/FV conversion, adds stay constant
+        const yourTradeFormatted = modeHV ? yourTradeVal / HV_DIVISOR : yourTradeVal;
+        const theirTradeFormatted = modeHV ? theirTradeVal / HV_DIVISOR : theirTradeVal;
+        
+        // Calculate difference with proper formatting
+        const diff = (theirTradeFormatted + theirAddsVal) - (yourTradeFormatted + yourAddsVal);
+        
+        const yourTotal = yourTradeVal + yourAddsVal;
+        const theirTotal = theirTradeVal + theirAddsVal;
 
         resultEl.classList.remove('wfl-result-win', 'wfl-result-fair', 'wfl-result-lose');
         
-        if (yourVal === 0 && theirVal === 0) {
+        if (yourTotal === 0 && theirTotal === 0) {
             resultEl.textContent = '--';
             fillBar.style.width = '50%';
             fillBar.classList.remove('active');
@@ -332,8 +341,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         fillBar.classList.add('active');
-        const total = yourVal + theirVal;
-        fillBar.style.width = `${(yourVal / total) * 100}%`;
+        const yourFormattedTotal = yourTradeFormatted + yourAddsVal;
+        const theirFormattedTotal = theirTradeFormatted + theirAddsVal;
+        fillBar.style.width = `${(yourFormattedTotal / (yourFormattedTotal + theirFormattedTotal)) * 100}%`;
         
         if (Math.abs(diff) < 0.01) { // Use small epsilon for floating point comparison
             resultEl.textContent = 'Fair';
@@ -342,7 +352,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const isWin = diff > 0;
             const modeLabel = modeHV ? 'hv' : 'fv';
-            resultEl.innerHTML = `${formatNumberForDisplay(Math.abs(diff))}<br><span class="wfl-mode">${modeLabel} ${isWin ? 'Win' : 'Loss'}</span>`;
+            const displayDiff = modeHV ? Math.abs(diff).toFixed(3).replace(/\.?0+$/, '') : Math.round(Math.abs(diff)).toLocaleString();
+            resultEl.innerHTML = `${displayDiff}<br><span class="wfl-mode">${modeLabel} ${isWin ? 'Win' : 'Loss'}</span>`;
             resultEl.classList.add(isWin ? 'wfl-result-win' : 'wfl-result-lose');
         }
         
