@@ -12,3 +12,4 @@ env/
 dist/
 build/
 .pytest_cache/
+docs/app.py

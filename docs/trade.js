@@ -68,6 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CORE CALCULATIONS (Math-only, no DOM) ---
     function calculateItemValue(item) {
+        // Adds items always return their quantity as value (no SHG, no conversions)
+        if (item.isAdds) {
+            return item.quantity || 0;
+        }
+        
         let baseVal = Number(item.baseValue) || 0;
         const nameKey = (item.name || '').toLowerCase();
         const rarity = (item.rarity || '').toLowerCase();
@@ -87,9 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return baseVal;
     }
 
-    function formatNumberForDisplay(n) {
-        const num = modeHV ? n / HV_DIVISOR : n;
-        if (modeHV) return num.toFixed(3).replace(/\.?0+$/, '');
+    function formatNumberForDisplay(n, isAdds = false) {
+        // Adds items never use HV conversion
+        const num = (modeHV && !isAdds) ? n / HV_DIVISOR : n;
+        if (modeHV && !isAdds) return num.toFixed(3).replace(/\.?0+$/, '');
         if (num < 5 && num % 1 !== 0) return num.toFixed(1);
         return Math.round(num).toLocaleString();
     }
@@ -106,83 +112,144 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item) {
                 slot.classList.add('filled');
                 
-                // Add stability border styling
-                if (item.stabilityType) {
-                    slot.dataset.stability = item.stabilityType;
-                }
-                
-                // Add SHG indicator if applicable (use item's own SHG state)
-                if (item.shg && shouldShowSHGIndicator(item)) {
-                    slot.dataset.shg = item.shg;
-                }
-
-                const filename = encodeURIComponent(item.name + '.png');
-                slot.innerHTML = `
-                    <div class="item-slot-content">
-                        <div class="item-slot-img">
-                            <img src="items/${filename}" onerror="this.src='items/Default.png'" alt="${item.name}">
-                        </div>
-                        <div class="qty-control">
-                            <button class="qty-btn dec" aria-label="Decrease quantity">−</button>
-                            <input class="qty-input" type="number" value="${item.quantity}" min="1" max="${MAX_QUANTITY}" aria-label="Item quantity">
-                            <button class="qty-btn inc" aria-label="Increase quantity">+</button>
-                        </div>
-                    </div>`;
-
-                // Item interactions
-                const input = slot.querySelector('.qty-input');
-                
-                input.oninput = (e) => {
-                    // Strip non-digits
-                    let val = e.target.value.replace(/[^0-9]/g, '');
-                    e.target.value = val;
+                // Special rendering for Adds items
+                if (item.isAdds) {
+                    slot.innerHTML = `
+                        <div class="item-slot-content">
+                            <div class="item-slot-img" style="display: flex; align-items: center; justify-content: center;">
+                                <svg viewBox="0 0 24 24" style="width: 70%; height: 70%;" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                            </div>
+                            <div class="qty-control" style="justify-content: center;">
+                                <input class="qty-input" type="number" value="${item.quantity}" min="0" max="10000" aria-label="Adds value" style="text-align: center;">
+                            </div>
+                        </div>`;
                     
-                    if (val === '') {
+                    const input = slot.querySelector('.qty-input');
+                    
+                    input.oninput = (e) => {
+                        // Strip non-digits
+                        let val = e.target.value.replace(/[^0-9]/g, '');
+                        e.target.value = val;
+                        
+                        if (val === '') {
+                            updateTotalsOnly();
+                            return;
+                        }
+                        
+                        let num = Math.min(10000, Math.max(0, parseInt(val)));
+                        e.target.value = num;
+                        item.quantity = num;
                         updateTotalsOnly();
-                        return;
+                    };
+                    
+                    input.onblur = (e) => {
+                        if (e.target.value === '') {
+                            e.target.value = '0';
+                            item.quantity = 0;
+                            updateTotalsOnly();
+                        }
+                    };
+                    
+                    input.onkeydown = (e) => {
+                        if (e.key === 'Enter') {
+                            if (e.target.value === '') {
+                                e.target.value = '0';
+                                item.quantity = 0;
+                            }
+                            e.target.blur();
+                        }
+                    };
+                    
+                    // Remove item on background click
+                    slot.onclick = (e) => {
+                        if (!['INPUT'].includes(e.target.tagName)) {
+                            dataArray.splice(i, 1);
+                            updateAll();
+                        }
+                    };
+                } else {
+                    // Normal item rendering
+                    // Add stability border styling
+                    if (item.stabilityType) {
+                        slot.dataset.stability = item.stabilityType;
                     }
                     
-                    let num = Math.min(MAX_QUANTITY, Math.max(1, parseInt(val)));
-                    e.target.value = num;
-                    item.quantity = num;
-                    updateTotalsOnly(); // Don't redraw grid while typing!
-                };
-                
-                input.onblur = (e) => {
-                    if (e.target.value === '' || Number(e.target.value) < 1) {
-                        e.target.value = '1';
-                        item.quantity = 1;
-                        updateTotalsOnly();
+                    // Add SHG indicator if applicable (use item's own SHG state)
+                    if (item.shg && shouldShowSHGIndicator(item)) {
+                        slot.dataset.shg = item.shg;
                     }
-                };
-                
-                input.onkeydown = (e) => {
-                    if (e.key === 'Enter') {
+
+                    const filename = encodeURIComponent(item.name + '.png');
+                    slot.innerHTML = `
+                        <div class="item-slot-content">
+                            <div class="item-slot-img">
+                                <img src="items/${filename}" onerror="this.src='items/Default.png'" alt="${item.name}">
+                            </div>
+                            <div class="qty-control">
+                                <button class="qty-btn dec" aria-label="Decrease quantity">−</button>
+                                <input class="qty-input" type="number" value="${item.quantity}" min="1" max="${MAX_QUANTITY}" aria-label="Item quantity">
+                                <button class="qty-btn inc" aria-label="Increase quantity">+</button>
+                            </div>
+                        </div>`;
+
+                    // Item interactions
+                    const input = slot.querySelector('.qty-input');
+                    
+                    input.oninput = (e) => {
+                        // Strip non-digits
+                        let val = e.target.value.replace(/[^0-9]/g, '');
+                        e.target.value = val;
+                        
+                        if (val === '') {
+                            updateTotalsOnly();
+                            return;
+                        }
+                        
+                        let num = Math.min(MAX_QUANTITY, Math.max(1, parseInt(val)));
+                        e.target.value = num;
+                        item.quantity = num;
+                        updateTotalsOnly(); // Don't redraw grid while typing!
+                    };
+                    
+                    input.onblur = (e) => {
                         if (e.target.value === '' || Number(e.target.value) < 1) {
                             e.target.value = '1';
                             item.quantity = 1;
+                            updateTotalsOnly();
                         }
-                        e.target.blur();
-                    }
-                };
-                
-                slot.querySelector('.inc').onclick = () => { 
-                    item.quantity = Math.min(MAX_QUANTITY, item.quantity + 1); 
-                    updateAll(); 
-                };
-                
-                slot.querySelector('.dec').onclick = () => { 
-                    item.quantity = Math.max(1, item.quantity - 1); 
-                    updateAll(); 
-                };
-                
-                // Remove item on background click
-                slot.onclick = (e) => {
-                    if (!['INPUT', 'BUTTON'].includes(e.target.tagName)) {
-                        dataArray.splice(i, 1);
-                        updateAll();
-                    }
-                };
+                    };
+                    
+                    input.onkeydown = (e) => {
+                        if (e.key === 'Enter') {
+                            if (e.target.value === '' || Number(e.target.value) < 1) {
+                                e.target.value = '1';
+                                item.quantity = 1;
+                            }
+                            e.target.blur();
+                        }
+                    };
+                    
+                    slot.querySelector('.inc').onclick = () => { 
+                        item.quantity = Math.min(MAX_QUANTITY, item.quantity + 1); 
+                        updateAll(); 
+                    };
+                    
+                    slot.querySelector('.dec').onclick = () => { 
+                        item.quantity = Math.max(1, item.quantity - 1); 
+                        updateAll(); 
+                    };
+                    
+                    // Remove item on background click
+                    slot.onclick = (e) => {
+                        if (!['INPUT', 'BUTTON'].includes(e.target.tagName)) {
+                            dataArray.splice(i, 1);
+                            updateAll();
+                        }
+                    };
+                }
             } else {
                 // Empty slot click
                 slot.onclick = () => openModal(dataArray);
@@ -206,15 +273,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateTotalsOnly() {
-        const yourTotal = yourTrade.reduce((sum, item) => sum + (calculateItemValue(item) * item.quantity), 0);
-        const theirTotal = theirTrade.reduce((sum, item) => sum + (calculateItemValue(item) * item.quantity), 0);
+        // Separate adds value from regular trade value
+        const yourTradeValue = yourTrade.reduce((sum, item) => {
+            if (item.isAdds) return sum;
+            return sum + (calculateItemValue(item) * item.quantity);
+        }, 0);
+        const yourAddsValue = yourTrade.reduce((sum, item) => {
+            if (!item.isAdds) return sum;
+            return sum + (item.quantity || 0);
+        }, 0);
+        
+        const theirTradeValue = theirTrade.reduce((sum, item) => {
+            if (item.isAdds) return sum;
+            return sum + (calculateItemValue(item) * item.quantity);
+        }, 0);
+        const theirAddsValue = theirTrade.reduce((sum, item) => {
+            if (!item.isAdds) return sum;
+            return sum + (item.quantity || 0);
+        }, 0);
+        
+        // Combine for total comparison, but display shows adds separately
+        const yourTotal = yourTradeValue + yourAddsValue;
+        const theirTotal = theirTradeValue + theirAddsValue;
         
         const modeLabel = modeHV ? 'hv' : 'fv';
         const yourTotalEl = document.getElementById('your-total');
         const theirTotalEl = document.getElementById('their-total');
         
-        if (yourTotalEl) yourTotalEl.textContent = `${formatNumberForDisplay(yourTotal)} ${modeLabel}`;
-        if (theirTotalEl) theirTotalEl.textContent = `${formatNumberForDisplay(theirTotal)} ${modeLabel}`;
+        // Format trade value with HV/FV conversion, adds value stays constant
+        const yourTradeDisplay = formatNumberForDisplay(yourTradeValue);
+        const yourAddsDisplay = yourAddsValue > 0 ? ` + ${formatNumberForDisplay(yourAddsValue, true)}` : '';
+        const theirTradeDisplay = formatNumberForDisplay(theirTradeValue);
+        const theirAddsDisplay = theirAddsValue > 0 ? ` + ${formatNumberForDisplay(theirAddsValue, true)}` : '';
+        
+        if (yourTotalEl) yourTotalEl.textContent = `${yourTradeDisplay}${yourAddsDisplay} ${modeLabel}`;
+        if (theirTotalEl) theirTotalEl.textContent = `${theirTradeDisplay}${theirAddsDisplay} ${modeLabel}`;
         updateWFL(yourTotal, theirTotal);
     }
 
@@ -310,8 +403,41 @@ document.addEventListener('DOMContentLoaded', () => {
         
         itemList.innerHTML = '';
         
+        // Add 'Adds' item always, or if search matches "adds"
+        const showAdds = !query || 'adds'.toLowerCase().includes(query);
+        if (showAdds) {
+            const div = document.createElement('div');
+            div.className = 'modal-item';
+            div.innerHTML = `
+    <div class="modal-item-img" style="display: flex; align-items: center; justify-content: center; background: transparent;">
+        <svg viewBox="0 0 24 24" style="width: 80%; height: 80%;" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+    </div>
+    <div class="modal-item-name">Adds</div>`;
+            
+            div.onclick = () => {
+                activeArray.push({ 
+                    name: 'Adds',
+                    baseValue: 0,
+                    quantity: 0,
+                    rarity: 'special',
+                    stability: null,
+                    stabilityType: null,
+                    shg: null,
+                    isAdds: true // Special flag to identify Adds items
+                });
+                if (modal) modal.style.display = 'none';
+                updateAll();
+            };
+            itemList.appendChild(div);
+        }
+        
         if (filtered.length === 0) {
-            itemList.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">No items found</p>';
+            if (itemList.children.length === 0) {
+                itemList.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">No items found</p>';
+            }
             return;
         }
         

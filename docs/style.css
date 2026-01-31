@@ -489,8 +489,9 @@ body {
     appearance: none;
     -moz-appearance: textfield;
     padding: 0.3em;
-    flex-shrink: 0;
-    max-width: calc(100% - 3em);
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: visible;
 }
 
 .qty-input:focus {
