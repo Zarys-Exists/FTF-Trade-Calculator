@@ -342,8 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             const isWin = diff > 0;
             const modeLabel = modeHV ? 'hv' : 'fv';
-            // Display difference without mode conversion since totals are already mode-adjusted
-            resultEl.innerHTML = `${formatNumberForDisplay(Math.abs(diff), true)}<br><span class="wfl-mode">${modeLabel} ${isWin ? 'Win' : 'Loss'}</span>`;
+            resultEl.innerHTML = `${formatNumberForDisplay(Math.abs(diff))}<br><span class="wfl-mode">${modeLabel} ${isWin ? 'Win' : 'Loss'}</span>`;
             resultEl.classList.add(isWin ? 'wfl-result-win' : 'wfl-result-lose');
         }
         
