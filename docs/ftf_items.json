@@ -318,8 +318,8 @@
         {"name": "Sugar Cookies","value": 2,"rarity": "Rare","demand": 0.5,"stability": "stable","rank": 81},
         {"name": "Sunset Beach","value": 2,"rarity": "Rare","demand": 0.5,"stability": "stable","rank": 82},
         {"name": "Red Man's Vengeance","value": 0,"rarity": "Rare","demand": 0.5,"stability": "stable","rank": 83},
-        {"name": "Backrooms","value": 0,"rarity": "Rare","demand": 0.5,"stability": "stable","rank": 84},
-        {"name": "Job Application","value": 0,"rarity": "Rare","demand": 0.5,"stability": "stable","rank": 85},
+        {"name": "Backrooms","value": -1.0,"rarity": "Rare","demand": 0.5,"stability": "stable","rank": 84},
+        {"name": "Job Application","value": -1.0,"rarity": "Rare","demand": 0.5,"stability": "stable","rank": 85},
         {"name": "Bleak Ink","value": 140,"rarity": "Common","demand": 3.0,"stability": "stable","rank": 1},
         {"name": "Glowy Bush","value": 50,"rarity": "Common","demand": 2.5,"stability": "stable","rank": 2},
         {"name": "Ghost","value": 40,"rarity": "Common","demand": 2.5,"stability": "stable","rank": 3},
@@ -425,5 +425,6 @@
         {"name": "Winter Wind","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 103},
         {"name": "Winterly Night","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 104},
         {"name": "Yeti","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 105}
-    ]
+    ],
+    "last_updated": "2026-02-01T10:12:46.892836"
 }
