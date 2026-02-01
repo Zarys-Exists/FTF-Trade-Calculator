@@ -1,12 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CONSTANTS ---
+    const LAST_UPDATED = '29 January';
     const HV_DIVISOR = 40;
     const MAX_SLOTS = 27;
     const MAX_QUANTITY = 100;
 
-    // --- STATE MANAGEMENT (The Source of Truth) ---
+    // --- STATE MANAGEMENT
     let allItems = [];
-    let yourTrade = [];  // Array of {name, baseValue, rarity, stability, stabilityType, quantity}
+    let yourTrade = []; 
     let theirTrade = [];
     let modeHV = false;
     let currentSHG = null;
@@ -31,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Critical DOM elements missing. Check HTML structure.');
     }
 
-    // --- THEME LOGIC (Persistent with localStorage) ---
+    // --- THEME LOGIC ---
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         htmlElement.classList.add('dark-theme');
@@ -44,6 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
             themeToggle.textContent = isDark ? 'Light Mode' : 'Dark Mode';
         });
+    }
+
+    // --- INFO LINES (Last Updated) ---
+    const lastUpdatedElement = document.getElementById('last-updated');
+    if (lastUpdatedElement) {
+        lastUpdatedElement.textContent = LAST_UPDATED;
     }
 
     // --- UTILITY FUNCTIONS ---
@@ -66,9 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
         theirGrid.scrollTop = 0;
     }
 
-    // --- CORE CALCULATIONS (Math-only, no DOM) ---
+    // --- CORE CALCULATIONS ---
     function calculateItemValue(item) {
-        // Adds items always return their quantity as value (no SHG, no conversions)
         if (item.isAdds) {
             return item.quantity || 0;
         }
@@ -93,14 +99,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatNumberForDisplay(n, isAdds = false) {
-        // Adds items never use HV conversion
         const num = (modeHV && !isAdds) ? n / HV_DIVISOR : n;
         if (modeHV && !isAdds) return num.toFixed(3).replace(/\.?0+$/, '');
         if (num < 5 && num % 1 !== 0) return num.toFixed(1);
         return Math.round(num).toLocaleString();
     }
 
-    // --- SMART RENDERING (Only updates what changed) ---
+    // --- SMART RENDERING ---
     function renderGrid(gridElement, dataArray) {
         gridElement.innerHTML = '';
         for (let i = 0; i < MAX_SLOTS; i++) {
@@ -130,7 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const input = slot.querySelector('.qty-input');
                     
                     input.oninput = (e) => {
-                        // Strip non-digits
                         let val = e.target.value.replace(/[^0-9]/g, '');
                         e.target.value = val;
                         
@@ -163,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     };
                     
-                    // Remove item on background click
                     slot.onclick = (e) => {
                         if (!['INPUT'].includes(e.target.tagName)) {
                             dataArray.splice(i, 1);
@@ -171,13 +174,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     };
                 } else {
-                    // Normal item rendering
-                    // Add stability border styling
+
                     if (item.stabilityType) {
                         slot.dataset.stability = item.stabilityType;
                     }
                     
-                    // Add SHG indicator if applicable (use item's own SHG state)
                     if (item.shg && shouldShowSHGIndicator(item)) {
                         slot.dataset.shg = item.shg;
                     }
@@ -195,11 +196,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>`;
 
-                    // Item interactions
                     const input = slot.querySelector('.qty-input');
                     
                     input.oninput = (e) => {
-                        // Strip non-digits
                         let val = e.target.value.replace(/[^0-9]/g, '');
                         e.target.value = val;
                         
@@ -242,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         updateAll(); 
                     };
                     
-                    // Remove item on background click
                     slot.onclick = (e) => {
                         if (!['INPUT', 'BUTTON'].includes(e.target.tagName)) {
                             dataArray.splice(i, 1);
@@ -251,7 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
                 }
             } else {
-                // Empty slot click
                 slot.onclick = () => openModal(dataArray);
             }
             gridElement.appendChild(slot);
@@ -309,12 +306,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (yourTotalEl) yourTotalEl.textContent = `${yourTradeDisplay}${yourAddsDisplay} ${modeLabel}`;
         if (theirTotalEl) theirTotalEl.textContent = `${theirTradeDisplay}${theirAddsDisplay} ${modeLabel}`;
         updateWFL(yourTradeValue, theirTradeValue, yourAddsValue, theirAddsValue);
+        saveTradeToLocalStorage();
     }
 
     function updateAll() {
         renderGrid(yourGrid, yourTrade);
         renderGrid(theirGrid, theirTrade);
         updateTotalsOnly();
+        saveTradeToLocalStorage();
     }
 
     function updateWFL(yourTradeVal, theirTradeVal, yourAddsVal, theirAddsVal) {
@@ -488,6 +487,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- LOCALSTORAGE PERSISTENCE ---
+    function saveTradeToLocalStorage() {
+        try {
+            localStorage.setItem('ftf-your-trade', JSON.stringify(yourTrade));
+            localStorage.setItem('ftf-their-trade', JSON.stringify(theirTrade));
+        } catch (e) {
+            console.error('Failed to save trades to localStorage:', e);
+        }
+    }
+
+    function loadTradeFromLocalStorage() {
+        try {
+            const savedYourTrade = localStorage.getItem('ftf-your-trade');
+            const savedTheirTrade = localStorage.getItem('ftf-their-trade');
+            
+            if (savedYourTrade) yourTrade = JSON.parse(savedYourTrade);
+            if (savedTheirTrade) theirTrade = JSON.parse(savedTheirTrade);
+        } catch (e) {
+            console.error('Failed to load trades from localStorage:', e);
+            yourTrade = [];
+            theirTrade = [];
+        }
+    }
+
     // --- INITIALIZATION ---
     async function init() {
         // Only initialize calculator if we're on the calculator page
@@ -496,6 +519,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // We're on the guide page or another page - skip calculator initialization
             return;
         }
+        
+        // Load previously saved trades from localStorage
+        loadTradeFromLocalStorage();
+        
+        // Render empty grid and UI immediately
+        renderFvHvSwitch();
+        scrollGridsToTop();
+        updateAll();
         
         try {
             const [itemResp, exResp] = await Promise.all([
@@ -516,20 +547,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 shgExceptionsFull = new Set(exData.exceptions_full.map(s => s.toLowerCase()));
             }
             
-            renderFvHvSwitch();
-            scrollGridsToTop();
+            // Update grid with loaded items
             updateAll();
         } catch (e) { 
             console.error('Initialization error:', e);
             // Store error to show in modal when opened
             window.itemLoadError = e.message;
-            
-            // Still render the UI
-            if (yourGrid && theirGrid) {
-                renderFvHvSwitch();
-                scrollGridsToTop();
-                updateAll();
-            }
         }
     }
 
@@ -551,6 +574,13 @@ document.addEventListener('DOMContentLoaded', () => {
             toggle.querySelector('.knob').textContent = modeHV ? 'hv' : 'fv';
             updateAll();
         };
+        
+        const infoDiv = document.createElement('div');
+infoDiv.className = 'trade-info';
+infoDiv.innerHTML = `
+    <div><span class="label">Last updated:</span> <span class="value">${LAST_UPDATED}</span></div>
+    <div><span class="label">Values source:</span> <a href="https://ftf-values.base44.app/home" target="_blank" rel="noopener noreferrer">Official FTF values</a></div>`;
+tradeLayout.appendChild(infoDiv);
     }
 
     // --- EVENT LISTENERS ---
@@ -584,7 +614,9 @@ document.addEventListener('DOMContentLoaded', () => {
             yourTrade = []; 
             theirTrade = []; 
             scrollGridsToTop();
-            updateAll(); 
+            updateAll();
+            localStorage.removeItem('ftf-your-trade');
+            localStorage.removeItem('ftf-their-trade');
         };
     }
     
