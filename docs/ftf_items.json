@@ -36,8 +36,8 @@
         {"name": "Pristine Chocolatery","value": 60,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 34},
         {"name": "Roasted Turkey","value": 60,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 35},
         {"name": "Piñata","value": 55,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 36},
-        {"name": "Pot O' Gold","value": 55,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 37},
-        {"name": "Grim Galleon","value": 50.0,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 38},
+        {"name": "Grim Galleon","value": 50.0,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 37},
+        {"name": "Pot O' Gold","value": 50.0,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 38},
         {"name": "Ragebringer","value": 50.0,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 39},
         {"name": "Autumn Scarecrow","value": 45,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 40},
         {"name": "Cranberry Barrel","value": 45,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 41},
@@ -426,5 +426,5 @@
         {"name": "Winterly Night","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 104},
         {"name": "Yeti","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 105}
     ],
-    "last_updated": "2026-02-02T02:07:24.782610"
+    "last_updated": "2026-02-02T23:28:12.072132"
 }
