@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- UTILITY FUNCTIONS ---
     function parseStabilityType(stability) {
         if (!stability) return null;
-        const stabilityLower = stability.toLowerCase();
+        const stabilityLower = stability.toLowerCase().replace(/_/g, ' ');
         
         if (stabilityLower === 'stable') return null;
         if (stabilityLower.includes('doing well')) return 'doing-well';
