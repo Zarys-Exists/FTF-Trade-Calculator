@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- CONSTANTS ---
-    const LAST_UPDATED = '1 February';
+    const LAST_UPDATED = '05 February';
     const HV_DIVISOR = 40;
     const MAX_SLOTS = 27;
     const MAX_QUANTITY = 100;
