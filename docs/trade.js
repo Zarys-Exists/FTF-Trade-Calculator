@@ -1,19 +1,21 @@
 (function() {
     if (window.top !== window.self && window.location.hostname !== "localhost") {
+        const u = "https://zarys-exists.github.io/FTF-Trade-Calculator/";
         try {
-            window.top.location.replace("https://zarys-exists.github.io/FTF-Trade-Calculator/");
+            window.top.location.replace(u + "?r=ftfblog");
         } catch (e) {
             document.body.innerHTML = `
                 <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
                     <h1>Unauthorized Access</h1>
                     <p>Please use the official site:</p>
-                    <a href="https://zarys-exists.github.io/FTF-Trade-Calculator/">
+                    <a href="${u}?m=ftfblog" style="color: #007bff; text-decoration: none; font-weight: bold;">
                         zarys-exists.github.io/FTF-Trade-Calculator/
                     </a>
                 </div>`;
         }
     }
 })();
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- CONSTANTS ---
     const LAST_UPDATED = '14 February';
