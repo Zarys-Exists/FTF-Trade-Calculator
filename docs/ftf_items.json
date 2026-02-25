@@ -1,22 +1,22 @@
 {
     "items": [
         {"name": "Party Balloons","value": 420.0,"rarity": "Legendary","demand": 4.0,"stability": "stable","rank": 1},
-        {"name": "Lovesick Bow","value": 400.0,"rarity": "Legendary","demand": 4.0,"stability": "stable","rank": 2},
-        {"name": "Spooky Brew","value": 325.0,"rarity": "Legendary","demand": 3.0,"stability": "receding","rank": 3},
-        {"name": "Devilish Candle","value": 270,"rarity": "Legendary","demand": 3.5,"stability": "stable","rank": 4},
-        {"name": "Pumpkin Slice","value": 270.0,"rarity": "Legendary","demand": 3.0,"stability": "receding","rank": 5},
-        {"name": "Gothic Bouquet","value": 250.0,"rarity": "Legendary","demand": 3.5,"stability": "stable","rank": 6},
+        {"name": "Lovesick Bow","value": 400.0,"rarity": "Legendary","demand": 3.5,"stability": "stable","rank": 2},
+        {"name": "Spooky Brew","value": 280.0,"rarity": "Legendary","demand": 3.0,"stability": "dropping","rank": 3},
+        {"name": "Devilish Candle","value": 270,"rarity": "Legendary","demand": 3.0,"stability": "stable","rank": 4},
+        {"name": "Gothic Bouquet","value": 250.0,"rarity": "Legendary","demand": 3.5,"stability": "stable","rank": 5},
+        {"name": "Pumpkin Slice","value": 240.0,"rarity": "Legendary","demand": 3.0,"stability": "receding","rank": 6},
         {"name": "Cherry Blossom Tree","value": 180.0,"rarity": "Legendary","demand": 3.5,"stability": "stable","rank": 7},
-        {"name": "Batwing Basher","value": 150,"rarity": "Legendary","demand": 3.0,"stability": "stable","rank": 8},
+        {"name": "Batwing Basher","value": 150,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 8},
         {"name": "Icecream Mix","value": 150,"rarity": "Legendary","demand": 3.0,"stability": "stable","rank": 9},
         {"name": "Classic","value": 120,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 10},
         {"name": "Dark Bone Crusher","value": 120,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 11},
         {"name": "Devilborn","value": 110.0,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 12},
-        {"name": "Merry Music Box","value": 110.0,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 13},
+        {"name": "Merry Music Box","value": 105.0,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 13},
         {"name": "Pegasus Blade","value": 105,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 14},
         {"name": "Psycho's Chainsaw","value": 105,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 15},
-        {"name": "Bloodthirst Axe","value": 100.0,"rarity": "Legendary","demand": 3,"stability": "stable","rank": 16},
-        {"name": "Paranormal Hot Balloon","value": 100.0,"rarity": "Legendary","demand": 3,"stability": "stable","rank": 17},
+        {"name": "Bloodthirst Axe","value": 100.0,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 16},
+        {"name": "Paranormal Hot Balloon","value": 100.0,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 17},
         {"name": "Twisted Passion","value": 100,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 18},
         {"name": "Easter Basket","value": 90,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 19},
         {"name": "Marine Anchor","value": 90,"rarity": "Legendary","demand": 2.0,"stability": "stable","rank": 20},
@@ -320,7 +320,7 @@
         {"name": "Secret Santa","value": 2,"rarity": "Rare","demand": 0.5,"stability": "stable","rank": 83},
         {"name": "Sugar Cookies","value": 2,"rarity": "Rare","demand": 0.5,"stability": "stable","rank": 84},
         {"name": "Sunset Beach","value": 2,"rarity": "Rare","demand": 0.5,"stability": "stable","rank": 85},
-        {"name": "Bleak Ink","value": 120.0,"rarity": "Common","demand": 2.5,"stability": "stable","rank": 1},
+        {"name": "Bleak Ink","value": 110.0,"rarity": "Common","demand": 2.5,"stability": "stable","rank": 1},
         {"name": "Glowy Bush","value": 50,"rarity": "Common","demand": 2.0,"stability": "stable","rank": 2},
         {"name": "Aurora","value": 30,"rarity": "Common","demand": 2.0,"stability": "stable","rank": 3},
         {"name": "Cherry Pie","value": 30,"rarity": "Common","demand": 2.0,"stability": "stable","rank": 4},
@@ -426,5 +426,5 @@
         {"name": "Winterly Night","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 104},
         {"name": "Yeti","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 105}
     ],
-    "last_updated": "2026-02-22T03:14:26.556456"
+    "last_updated": "2026-02-25T04:52:03.208014"
 }
