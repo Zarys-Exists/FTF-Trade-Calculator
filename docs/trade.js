@@ -77,6 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const stabilityLower = stability.toLowerCase().replace(/_/g, ' ');
         
         if (stabilityLower === 'stable') return null;
+        if (stabilityLower.includes('rising')) return 'rising';
+        if (stabilityLower.includes('improving')) return 'improving';
         if (stabilityLower.includes('doing well')) return 'doing-well';
         if (stabilityLower.includes('dropping')) return 'dropping';
         if (stabilityLower.includes('struggling')) return 'struggling';

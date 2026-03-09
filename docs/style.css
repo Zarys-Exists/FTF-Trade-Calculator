@@ -53,6 +53,16 @@ a:focus, a:active,
     
     --scrollbar-bg: #2d0054;
     --scrollbar-thumb: var(--color-accent);
+    
+    /* Stability Colors */
+    --stability-label-rising: #34d399;
+    --stability-label-improving: #46d27a;
+    --stability-label-doing-well: #a3e635;
+    --stability-label-stable: #8a2be2;
+    --stability-label-fluctuating: #facc15;
+    --stability-label-struggling: #fb923c;
+    --stability-label-receding: #f87171;
+    --stability-label-dropping: #ef4444;
 }
 
 /* Dark Theme variables */
@@ -85,6 +95,7 @@ html.dark-theme {
     
     --scrollbar-bg: #0b0b0b;
     --scrollbar-thumb: var(--color-primary);
+    --stability-label-stable: #3e3e3e;
 }
 
 html {
@@ -420,20 +431,26 @@ body {
 }
 
 /* Stability Border Indicators */
+.item-slot.filled[data-stability="rising"] {
+    border-color: var(--stability-label-rising);
+}
+.item-slot.filled[data-stability="improving"] {
+    border-color: var(--stability-label-improving);
+}
 .item-slot.filled[data-stability="doing-well"] {
-    border-color: #02f7b2;
-}
-.item-slot.filled[data-stability="dropping"] {
-    border-color: #ff0000;
-}
-.item-slot.filled[data-stability="struggling"] {
-    border-color: #f2ff00;
+    border-color: var(--stability-label-doing-well);
 }
 .item-slot.filled[data-stability="fluctuating"] {
-    border-color: #00ff3c;
+    border-color: var(--stability-label-fluctuating);
+}
+.item-slot.filled[data-stability="struggling"] {
+    border-color: var(--stability-label-struggling);
 }
 .item-slot.filled[data-stability="receding"] {
-    border-color: #ffa200;
+    border-color: var(--stability-label-receding);
+}
+.item-slot.filled[data-stability="dropping"] {
+    border-color: var(--stability-label-dropping);
 }
 
 .single-line {
@@ -705,7 +722,6 @@ body {
     border-radius: 0.5rem;
     cursor: pointer;
     font-size: 0.9rem;
-    transition: background-color 0.2s ease;
     width: 6rem;
 }
 
@@ -1003,6 +1019,13 @@ body {
     margin-bottom: 0.25rem;
 }
 
+.stability-color {
+    color: var(--stability-text-color);
+    font-weight: 600;
+    display: block;
+    margin-top: 0.5rem;
+}
+
 .guide-closing {
     font-style: italic;
     color: #c8a8d8;
@@ -1046,6 +1069,18 @@ html.dark-theme .guide-list li:hover {
 
 html.dark-theme .guide-list li strong {
     color: #fcfcfc;
+}
+
+html.dark-theme .stability-color {
+    color: var(--stability-text-color);
+}
+
+html.dark-theme .trade-info .label {
+    color: #a0a0a0;
+}
+
+html.dark-theme .trade-info a:hover {
+    color: #b3b3b3;
 }
 
 html.dark-theme .guide-closing {

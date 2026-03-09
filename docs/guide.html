@@ -54,26 +54,22 @@
     <div class="guide-content">
         <section class="guide-section">
             <h2>Introduction</h2>
-            <p>This site is a basic trade calculator to check the value of your potential FTF trades. It's useful for those who 
+            <p>This site is a trade calculator to check the value of your potential FTF trades. It's useful for those who 
                 either do not have a good grasp of values or those who would like to speed up their trade calculations. 
-                Read the instructions below to understand its features and nuances. Any and all feedback is welcome and appreciated.</p>
+                Read the information below to understand its features. You are welcome to send any feedback or suggestions
+                to my discord (@Zvarys) </p>
         </section>
 
         <section class="guide-section">
             <h2>Use Guide</h2>
             <ul class="guide-list">
                 <li>
-                    <strong>Value Source:</strong> All values displayed on this site come from the <a href="https://ftf-values.base44.app/" target="_blank" 
-                    rel="noopener noreferrer">official FTF values website</a> and are updated within a few hours of each value list update. Please note, however, 
-                    that the site does not account for the demand of the items.
+                    <strong>Value Source:</strong> All values displayed on this site are from the <a href="https://ftf-values.base44.app/" target="_blank" 
+                    rel="noopener noreferrer">official FTF values website</a> and are usually updated within 1-3 hours of each value list update. 
                 </li>
                 <li>
                     <strong>Items:</strong> The items are sorted by rarity and in the decreasing order of their value. Clicking on a filled slot will remove that item from 
                     the calculator. The "Adds" button allows you to add a hypothetical item that adopts the value of your choosing.
-                </li>
-                <li>
-                    <strong>Trade Value:</strong> The total value you're offering in a trade is displayed at the top left, 
-                    and the value given by the other trader is displayed at the top right. The difference between both values is given in the middle.
                 </li>
                 <li>
                     <strong>Set/Broken:</strong> Items are by default added to the calculator as a set and will have 
@@ -88,8 +84,7 @@
                 </li>
                 <li>
                     <strong>Quantity Limit:</strong> The quantity of an item can be increased or decreased by using the '+' or '-' buttons. It can also be 
-                    modified by pressing the quantity bar and entering your desired number. The quantity of a single slot is capped at 100. However, you can 
-                    add the same item in the next slot if you need more than that.
+                    modified by pressing the quantity bar and entering your desired number. The quantity of a single slot is capped at 100.
                 </li>
                 <li>
                     <strong>Unit Switching:</strong> You can switch between the old (HV) and new (FV) units of value through the toggle
@@ -98,13 +93,14 @@
                 <li>
                     <strong>Item Stability:</strong> The border color of an item slot indicates the stability of that item, which relates
                     to the current demand of that item. The colour code for each stability is given below. <br>
-                    <span style="color: #02f7b2; font-weight: 600; display: inline-block; width: 11rem;">Cyan border</span> – <strong>Doing Well</strong><br>
-                    <span style="color: #ff0000; font-weight: 600; display: inline-block; width: 11rem;">Red border</span> – <strong>Dropping</strong><br>
-                    <span style="color: #f2ff00; font-weight: 600; display: inline-block; width: 11rem;">Yellow border</span> – <strong>Struggling</strong><br>
-                    <span style="color: #00ff3c; font-weight: 600; display: inline-block; width: 11rem;">Green border</span> – <strong>Fluctuating</strong><br>
-                    <span style="color: #ffa200; font-weight: 600; display: inline-block; width: 11rem;">Orange border</span> – <strong>Receding</strong><br>
-                    <span style="color: #8a2be2; font-weight: 600; display: inline-block; width: 11rem;">Purple border</span> – <strong>Stable</strong><br>
-                    
+                    <span class="stability-color" style="--stability-text-color: var(--stability-label-rising);">Rising</span>
+                    <span class="stability-color" style="--stability-text-color: var(--stability-label-improving);">Improving</span>
+                    <span class="stability-color" style="--stability-text-color: var(--stability-label-doing-well);">Doing Well</span>
+                    <span class="stability-color" style="--stability-text-color: var(--stability-label-stable);">Stable</span>
+                    <span class="stability-color" style="--stability-text-color: var(--stability-label-fluctuating);">Fluctuating</span>
+                    <span class="stability-color" style="--stability-text-color: var(--stability-label-struggling);">Struggling</span>
+                    <span class="stability-color" style="--stability-text-color: var(--stability-label-receding);">Receding</span>
+                    <span class="stability-color" style="--stability-text-color: var(--stability-label-dropping);">Dropping</span>
                 </li>
             </ul>
 
