@@ -384,7 +384,7 @@
         {"name": "Chimney","value": 2,"rarity": "Common","demand": 0.5,"stability": "stable","rank": 62},
         {"name": "Cinnamon Latte","value": 2,"rarity": "Common","demand": 0.5,"stability": "stable","rank": 63},
         {"name": "Crescent Moon","value": 2,"rarity": "Common","demand": 0.5,"stability": "stable","rank": 64},
-        {"name": "Elf's Mallet","value": 3,"rarity": "Common","demand": 0.5,"stability": "stable","rank": 65},
+        {"name": "Elf's Mallet","value": 2,"rarity": "Common","demand": 0.5,"stability": "stable","rank": 65},
         {"name": "Frosty's Mallet","value": 2,"rarity": "Common","demand": 0.5,"stability": "stable","rank": 66},
         {"name": "Green Knitted","value": 2,"rarity": "Common","demand": 0.5,"stability": "stable","rank": 67},
         {"name": "Haystack","value": 2,"rarity": "Common","demand": 0.5,"stability": "stable","rank": 68},
