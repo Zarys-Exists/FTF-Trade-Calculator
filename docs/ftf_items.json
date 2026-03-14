@@ -401,7 +401,7 @@
         {"name": "Vibrant Leaves","value": 2,"rarity": "Common","demand": 0.5,"stability": "stable","rank": 79},
         {"name": "White Knitted","value": 2,"rarity": "Common","demand": 0.5,"stability": "stable","rank": 80},
         {"name": "Wreath","value": 2,"rarity": "Common","demand": 0.5,"stability": "stable","rank": 81},
-        {"name": "Camera","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 82},
+        {"name": "Camera","value": 2,"rarity": "Common","demand": 1.0,"stability": "fluctuating","rank": 82},
         {"name": "Christmas Biscuits","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 83},
         {"name": "Christmas Cracker","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 84},
         {"name": "Cinder Gift","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 85},
