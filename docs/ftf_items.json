@@ -112,7 +112,7 @@
         {"name": "Sweethearts Store","value": 10.0,"rarity": "Legendary","demand": 1.0,"stability": "stable","rank": 110},
         {"name": "Toy Elf","value": 10,"rarity": "Legendary","demand": 1.0,"stability": "stable","rank": 111},
         {"name": "Toy Santa","value": 10,"rarity": "Legendary","demand": 1,"stability": "stable","rank": 112},
-        {"name": "Year of the Horse","value": 10.0,"rarity": "Legendary","demand": 2.5,"stability": null,"rank": 113},
+        {"name": "Year of the Horse","value": 10.0,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 113},
         {"name": "Autumn Crops","value": 8,"rarity": "Legendary","demand": 0.5,"stability": "stable","rank": 114},
         {"name": "Cozy Cocoa","value": 8,"rarity": "Legendary","demand": 0.5,"stability": "stable","rank": 115},
         {"name": "Eggnog Machine","value": 8.0,"rarity": "Legendary","demand": 1.0,"stability": "stable","rank": 116},
@@ -434,6 +434,5 @@
         {"name": "Winter Wind","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 103},
         {"name": "Winterly Night","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 104},
         {"name": "Yeti","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 105}
-    ],
-    "last_updated": "2026-03-16T12:56:04.795056"
+    ]
 }
