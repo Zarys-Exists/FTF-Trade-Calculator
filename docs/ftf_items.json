@@ -1,6 +1,6 @@
 {
     "items": [
-        {"name": "Party Balloons","value": 420.0,"rarity": "Legendary","demand": 4.0,"stability": "stable","rank": 1},
+        {"name": "Party Balloons","value": 420.0,"rarity": "Legendary","demand": 4.0,"stability": "doing_well","rank": 1},
         {"name": "Lovesick Bow","value": 400.0,"rarity": "Legendary","demand": 3.5,"stability": "stable","rank": 2},
         {"name": "Devilish Candle","value": 270,"rarity": "Legendary","demand": 3.0,"stability": "stable","rank": 3},
         {"name": "Gothic Bouquet","value": 250.0,"rarity": "Legendary","demand": 3.5,"stability": "stable","rank": 4},
@@ -426,5 +426,5 @@
         {"name": "Winterly Night","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 104},
         {"name": "Yeti","value": 1,"rarity": "Common","demand": 0.0,"stability": "stable","rank": 105}
     ],
-    "last_updated": "2026-03-16T02:40:49.768640"
+    "last_updated": "2026-03-16T05:18:32.772507"
 }
