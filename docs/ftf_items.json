@@ -215,7 +215,7 @@
         {"name": "Autumn Foliage","value": 8,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 29},
         {"name": "Broken Mirror","value": 8,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 30},
         {"name": "Cursed Painting","value": 8,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 31},
-        {"name": "Fall Foliage","value": 8.0,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 32},
+        {"name": "Fall Foliage","value": 7,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 32},
         {"name": "Sour Snowcone","value": 8,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 33},
         {"name": "Sweet Snowcone","value": 8,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 34},
         {"name": "Veggie Eater Gopher","value": 8,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 35},
