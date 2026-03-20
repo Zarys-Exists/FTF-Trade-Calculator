@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const HV_DIVISOR = 40;
     const MAX_SLOTS = 27;
     const MAX_QUANTITY = 100;
+    const ITEM_PAGE_SIZE = 40; 
 
     // --- STATE MANAGEMENT
     let allItems = [];
@@ -32,6 +33,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentRarity = 'all';
     let shgExceptions8020 = new Set();
     let shgExceptionsFull = new Set();
+
+    // Lazy loading state
+    let filteredItemCache = [];
+    let renderedItemCount = 0;
+    let isLoadingMore = false;
+    let itemListObserver = null;
 
     // --- DOM ELEMENTS ---
     const themeToggle = document.getElementById('theme-toggle');
@@ -45,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetBtn = document.getElementById('reset-trade-btn');
     const raritySidebar = document.querySelector('.rarity-sidebar');
     
-    // Validate critical DOM elements
     if (!yourGrid || !theirGrid || !modal || !itemList || !searchInput || !resetBtn || !raritySidebar) {
         console.error('Critical DOM elements missing. Check HTML structure.');
     }
@@ -102,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let baseVal = Number(item.baseValue) || 0;
         const nameKey = (item.name || '').toLowerCase();
         const rarity = (item.rarity || '').toLowerCase();
-        const itemSHG = item.shg || null; // Use item's own SHG state, not global
+        const itemSHG = item.shg || null;
         
         if (shgExceptionsFull.has(nameKey)) return baseVal;
 
@@ -137,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item) {
                 slot.classList.add('filled');
                 
-                // Special rendering for Adds items
                 if (item.isAdds) {
                     slot.innerHTML = `
                         <div class="item-slot-content">
@@ -157,12 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     input.oninput = (e) => {
                         let val = e.target.value.replace(/[^0-9]/g, '');
                         e.target.value = val;
-                        
-                        if (val === '') {
-                            updateTotalsOnly();
-                            return;
-                        }
-                        
+                        if (val === '') { updateTotalsOnly(); return; }
                         let num = Math.min(10000, Math.max(0, parseInt(val)));
                         e.target.value = num;
                         item.quantity = num;
@@ -179,10 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     input.onkeydown = (e) => {
                         if (e.key === 'Enter') {
-                            if (e.target.value === '') {
-                                e.target.value = '0';
-                                item.quantity = 0;
-                            }
+                            if (e.target.value === '') { e.target.value = '0'; item.quantity = 0; }
                             e.target.blur();
                         }
                     };
@@ -190,24 +187,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     slot.onclick = (e) => {
                         if (!['INPUT'].includes(e.target.tagName)) {
                             dataArray.splice(i, 1);
-                            updateAll();
+                            setTimeout(() => updateAll(), 0);
                         }
                     };
                 } else {
-
                     if (item.stabilityType) {
                         slot.dataset.stability = item.stabilityType;
                     }
-                    
                     if (item.shg && shouldShowSHGIndicator(item)) {
                         slot.dataset.shg = item.shg;
                     }
 
-                    const filename = encodeURIComponent(item.name + '.png');
+                    const filename = encodeURIComponent(item.name + '.webp');
                     slot.innerHTML = `
                         <div class="item-slot-content">
                             <div class="item-slot-img">
-                                <img src="items/${filename}" onerror="this.src='items/Default.png'" alt="${item.name}">
+                                <img src="items/${filename}" onerror="this.src='items/Default.webp'" alt="${item.name}">
                             </div>
                             <div class="qty-control">
                                 <button class="qty-btn dec" aria-label="Decrease quantity">−</button>
@@ -221,16 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     input.oninput = (e) => {
                         let val = e.target.value.replace(/[^0-9]/g, '');
                         e.target.value = val;
-                        
-                        if (val === '') {
-                            updateTotalsOnly();
-                            return;
-                        }
-                        
+                        if (val === '') { updateTotalsOnly(); return; }
                         let num = Math.min(MAX_QUANTITY, Math.max(1, parseInt(val)));
                         e.target.value = num;
                         item.quantity = num;
-                        updateTotalsOnly(); // Don't redraw grid while typing!
+                        updateTotalsOnly();
                     };
                     
                     input.onblur = (e) => {
@@ -251,20 +241,25 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     };
                     
-                    slot.querySelector('.inc').onclick = () => { 
-                        item.quantity = Math.min(MAX_QUANTITY, item.quantity + 1); 
-                        updateAll(); 
+                    // FIX: update DOM directly for +/- buttons, skip full grid re-render
+                    slot.querySelector('.inc').onclick = (e) => {
+                        e.stopPropagation();
+                        item.quantity = Math.min(MAX_QUANTITY, item.quantity + 1);
+                        input.value = item.quantity;
+                        setTimeout(() => updateTotalsOnly(), 0);
                     };
                     
-                    slot.querySelector('.dec').onclick = () => { 
-                        item.quantity = Math.max(1, item.quantity - 1); 
-                        updateAll(); 
+                    slot.querySelector('.dec').onclick = (e) => {
+                        e.stopPropagation();
+                        item.quantity = Math.max(1, item.quantity - 1);
+                        input.value = item.quantity;
+                        setTimeout(() => updateTotalsOnly(), 0);
                     };
                     
                     slot.onclick = (e) => {
                         if (!['INPUT', 'BUTTON'].includes(e.target.tagName)) {
                             dataArray.splice(i, 1);
-                            updateAll();
+                            setTimeout(() => updateAll(), 0);
                         }
                     };
                 }
@@ -278,19 +273,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function shouldShowSHGIndicator(item) {
         const nameKey = (item.name || '').toLowerCase();
         const rarity = (item.rarity || '').toLowerCase();
-        
-        // Don't show for full exceptions
         if (shgExceptionsFull.has(nameKey)) return false;
-        
-        // Show for legendaries or non-legendary with modifier active
         if (rarity === 'legendary') return true;
         if (['epic', 'rare', 'common'].includes(rarity)) return true;
-        
         return false;
     }
 
     function updateTotalsOnly() {
-        // Separate adds value from regular trade value
         const yourTradeValue = yourTrade.reduce((sum, item) => {
             if (item.isAdds) return sum;
             return sum + (calculateItemValue(item) * item.quantity);
@@ -309,15 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return sum + (item.quantity || 0);
         }, 0);
         
-        // Combine for total comparison, but display shows adds separately
-        const yourTotal = yourTradeValue + yourAddsValue;
-        const theirTotal = theirTradeValue + theirAddsValue;
-        
         const modeLabel = modeHV ? 'hv' : 'fv';
         const yourTotalEl = document.getElementById('your-total');
         const theirTotalEl = document.getElementById('their-total');
         
-        // Format trade value with HV/FV conversion, adds value stays constant
         const yourTradeDisplay = formatNumberForDisplay(yourTradeValue);
         const yourAddsDisplay = yourAddsValue > 0 ? ` + ${formatNumberForDisplay(yourAddsValue, true)}` : '';
         const theirTradeDisplay = formatNumberForDisplay(theirTradeValue);
@@ -340,11 +324,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const resultEl = document.getElementById('wfl-result');
         const fillBar = document.getElementById('wfl-bar-fill');
         
-        // Only trade value gets HV/FV conversion, adds stay constant
         const yourTradeFormatted = modeHV ? yourTradeVal / HV_DIVISOR : yourTradeVal;
         const theirTradeFormatted = modeHV ? theirTradeVal / HV_DIVISOR : theirTradeVal;
         
-        // Calculate difference with proper formatting
         const diff = (theirTradeFormatted + theirAddsVal) - (yourTradeFormatted + yourAddsVal);
         
         const yourTotal = yourTradeVal + yourAddsVal;
@@ -364,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const theirFormattedTotal = theirTradeFormatted + theirAddsVal;
         fillBar.style.width = `${(yourFormattedTotal / (yourFormattedTotal + theirFormattedTotal)) * 100}%`;
         
-        if (Math.abs(diff) < 0.01) { // Use small epsilon for floating point comparison
+        if (Math.abs(diff) < 0.01) {
             resultEl.textContent = 'Fair';
             resultEl.classList.add('wfl-result-fair');
             resultEl.setAttribute('data-difference', '0');
@@ -379,9 +361,81 @@ document.addEventListener('DOMContentLoaded', () => {
         resultEl.setAttribute('data-difference', diff);
     }
 
-    // --- MODAL & SEARCH ---
+    // --- MODAL & LAZY LOADING ---
     let activeArray = null;
     let searchDebounceTimer = null;
+
+    // Sentinel element watched by IntersectionObserver to trigger next batch
+    function setupScrollObserver() {
+        if (itemListObserver) {
+            itemListObserver.disconnect();
+            itemListObserver = null;
+        }
+
+        const sentinel = document.createElement('div');
+        sentinel.id = 'item-list-sentinel';
+        sentinel.style.cssText = 'height:1px;width:100%;grid-column:1/-1;';
+        itemList.appendChild(sentinel);
+
+        itemListObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !isLoadingMore) {
+                loadNextItemBatch();
+            }
+        }, { root: itemList, rootMargin: '100px' });
+
+        itemListObserver.observe(sentinel);
+    }
+
+    function loadNextItemBatch() {
+        if (renderedItemCount >= filteredItemCache.length) return;
+
+        isLoadingMore = true;
+
+        // Remove sentinel before appending so it stays at the bottom
+        const sentinel = document.getElementById('item-list-sentinel');
+        if (sentinel) sentinel.remove();
+
+        const batch = filteredItemCache.slice(renderedItemCount, renderedItemCount + ITEM_PAGE_SIZE);
+        const fragment = document.createDocumentFragment();
+
+        batch.forEach(item => fragment.appendChild(createModalItemEl(item)));
+        itemList.appendChild(fragment);
+        renderedItemCount += batch.length;
+
+        // Re-attach sentinel if more items remain
+        if (renderedItemCount < filteredItemCache.length) {
+            setupScrollObserver();
+        }
+
+        isLoadingMore = false;
+    }
+
+    function createModalItemEl(item) {
+        const div = document.createElement('div');
+        div.className = 'modal-item';
+        div.innerHTML = `
+            <div class="modal-item-img">
+                <img src="items/${encodeURIComponent(item.name)}.webp"
+                     loading="lazy"
+                     onerror="this.src='items/Default.webp'"
+                     alt="${item.name}">
+            </div>
+            <div class="modal-item-name">${item.name}</div>`;
+        
+        div.onclick = () => {
+            const stabilityType = parseStabilityType(item.stability);
+            activeArray.push({ 
+                ...item, 
+                baseValue: item.value, 
+                quantity: 1,
+                stabilityType: stabilityType,
+                shg: currentSHG || null
+            });
+            if (modal) modal.style.display = 'none';
+            setTimeout(() => updateAll(), 0);
+        };
+        return div;
+    }
 
     function openModal(targetArray) {
         if (targetArray.length >= MAX_SLOTS) {
@@ -390,28 +444,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         activeArray = targetArray;
-        
-        // Reset filters on open
         currentRarity = 'all';
         currentSHG = null;
         if (searchInput) searchInput.value = '';
         
-        // Reset rarity filter buttons
         if (raritySidebar) {
             const activeBtn = raritySidebar.querySelector('.rarity-filter-btn.active');
             if (activeBtn) activeBtn.classList.remove('active');
             const allBtn = raritySidebar.querySelector('.rarity-filter-btn[data-rarity="all"]');
             if (allBtn) allBtn.classList.add('active');
-            
-            // Reset SHG buttons
             const activeShgBtn = raritySidebar.querySelector('.shg-btn.active');
             if (activeShgBtn) activeShgBtn.classList.remove('active');
         }
         
         if (modal) modal.style.display = 'flex';
-        updateDisplayedItems();
+        // Defer item list build so modal paint happens first
+        setTimeout(() => updateDisplayedItems(), 0);
         
-        // Focus search input for accessibility
         if (searchInput) {
             setTimeout(() => searchInput.focus(), 100);
         }
@@ -419,8 +468,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateDisplayedItems() {
         if (!itemList || !searchInput) return;
-        
-        // Show error if items failed to load
+
+        // Disconnect existing observer
+        if (itemListObserver) {
+            itemListObserver.disconnect();
+            itemListObserver = null;
+        }
+
+        itemList.innerHTML = '';
+        renderedItemCount = 0;
+        isLoadingMore = false;
+
         if (window.itemLoadError || allItems.length === 0) {
             itemList.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #999;">No items found</div>`;
             return;
@@ -430,22 +488,22 @@ document.addEventListener('DOMContentLoaded', () => {
         let filtered = allItems;
         if (currentRarity !== 'all') filtered = filtered.filter(i => i.rarity.toLowerCase() === currentRarity);
         if (query) filtered = filtered.filter(i => i.name.toLowerCase().includes(query));
-        
-        itemList.innerHTML = '';
-        
-        // Add 'Adds' item always, or if search matches "adds"
+
+        const fragment = document.createDocumentFragment();
+
+        // Always show Adds item first
         const showAdds = !query || 'adds'.toLowerCase().includes(query);
         if (showAdds) {
             const div = document.createElement('div');
             div.className = 'modal-item';
             div.innerHTML = `
-    <div class="modal-item-img" style="display: flex; align-items: center; justify-content: center; background: transparent;">
-        <svg viewBox="0 0 24 24" style="width: 80%; height: 80%;" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-    </div>
-    <div class="modal-item-name">Adds</div>`;
+                <div class="modal-item-img" style="display: flex; align-items: center; justify-content: center; background: transparent;">
+                    <svg viewBox="0 0 24 24" style="width: 80%; height: 80%;" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </div>
+                <div class="modal-item-name">Adds</div>`;
             
             div.onclick = () => {
                 activeArray.push({ 
@@ -456,54 +514,50 @@ document.addEventListener('DOMContentLoaded', () => {
                     stability: null,
                     stabilityType: null,
                     shg: null,
-                    isAdds: true // Special flag to identify Adds items
+                    isAdds: true
                 });
                 if (modal) modal.style.display = 'none';
-                updateAll();
+                setTimeout(() => updateAll(), 0);
             };
-            itemList.appendChild(div);
+            fragment.appendChild(div);
         }
-        
+
         if (filtered.length === 0) {
-            if (itemList.children.length === 0) {
-                itemList.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">No items found</p>';
+            itemList.appendChild(fragment);
+            if (!showAdds) {
+                const msg = document.createElement('p');
+                msg.style.cssText = 'color:#999;text-align:center;padding:2rem;grid-column:1/-1;';
+                msg.textContent = 'No items found';
+                itemList.appendChild(msg);
             }
             return;
         }
-        
-        filtered.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'modal-item';
-            div.innerHTML = `
-                <div class="modal-item-img">
-                    <img src="items/${encodeURIComponent(item.name)}.png" 
-                         onerror="this.src='items/Default.png'" 
-                         alt="${item.name}">
-                </div>
-                <div class="modal-item-name">${item.name}</div>`;
-            
-            div.onclick = () => {
-                const stabilityType = parseStabilityType(item.stability);
-                activeArray.push({ 
-                    ...item, 
-                    baseValue: item.value, 
-                    quantity: 1,
-                    stabilityType: stabilityType,
-                    shg: currentSHG || null // Store the current SHG mode with this item
-                });
-                if (modal) modal.style.display = 'none';
-                updateAll();
-            };
-            itemList.appendChild(div);
-        });
+
+        // Cache the full filtered list for lazy loading
+        filteredItemCache = filtered;
+
+        // Render first batch immediately
+        const firstBatch = filteredItemCache.slice(0, ITEM_PAGE_SIZE);
+        firstBatch.forEach(item => fragment.appendChild(createModalItemEl(item)));
+        renderedItemCount = firstBatch.length;
+
+        itemList.appendChild(fragment);
+
+        // Set up scroll observer for subsequent batches if needed
+        if (renderedItemCount < filteredItemCache.length) {
+            setupScrollObserver();
+        }
     }
 
     function closeModalHandler() {
         if (modal) modal.style.display = 'none';
-        // Clear any pending debounce timer
         if (searchDebounceTimer) {
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = null;
+        }
+        if (itemListObserver) {
+            itemListObserver.disconnect();
+            itemListObserver = null;
         }
     }
 
@@ -521,7 +575,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const savedYourTrade = localStorage.getItem('ftf-your-trade');
             const savedTheirTrade = localStorage.getItem('ftf-their-trade');
-            
             if (savedYourTrade) yourTrade = JSON.parse(savedYourTrade);
             if (savedTheirTrade) theirTrade = JSON.parse(savedTheirTrade);
         } catch (e) {
@@ -533,17 +586,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INITIALIZATION ---
     async function init() {
-        // Only initialize calculator if we're on the calculator page
-        // Check if required calculator elements exist
-        if (!yourGrid || !theirGrid) {
-            // We're on the guide page or another page - skip calculator initialization
-            return;
-        }
+        if (!yourGrid || !theirGrid) return;
         
-        // Load previously saved trades from localStorage
         loadTradeFromLocalStorage();
-        
-        // Render empty grid and UI immediately
         renderFvHvSwitch();
         scrollGridsToTop();
         updateAll();
@@ -554,9 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch('shg_exceptions.json').catch(() => null)
             ]);
             
-            if (!itemResp.ok) {
-                throw new Error('Failed to load items');
-            }
+            if (!itemResp.ok) throw new Error('Failed to load items');
             
             const data = await itemResp.json();
             allItems = data.items;
@@ -567,11 +610,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 shgExceptionsFull = new Set(exData.exceptions_full.map(s => s.toLowerCase()));
             }
             
-            // Update grid with loaded items
             updateAll();
         } catch (e) { 
             console.error('Initialization error:', e);
-            // Store error to show in modal when opened
             window.itemLoadError = e.message;
         }
     }
@@ -596,11 +637,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         const infoDiv = document.createElement('div');
-infoDiv.className = 'trade-info';
-infoDiv.innerHTML = `
-    <div><span class="label">Last updated:</span> <span class="value">${LAST_UPDATED}</span></div>
-    <div><span class="label">Values source:</span> <a href="https://ftf-values.base44.app/home" target="_blank" rel="noopener noreferrer">Official FTF values</a></div>`;
-tradeLayout.appendChild(infoDiv);
+        infoDiv.className = 'trade-info';
+        infoDiv.innerHTML = `
+            <div><span class="label">Last updated:</span> <span class="value">${LAST_UPDATED}</span></div>
+            <div><span class="label">Values source:</span> <a href="https://ftf-values.base44.app/home" target="_blank" rel="noopener noreferrer">Official FTF values</a></div>`;
+        tradeLayout.appendChild(infoDiv);
     }
 
     // --- EVENT LISTENERS ---
@@ -612,20 +653,18 @@ tradeLayout.appendChild(infoDiv);
         };
     }
     
-    // Close modal on Escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
             closeModalHandler();
         }
     });
     
-    // Debounced search input
     if (searchInput) {
         searchInput.oninput = () => {
             if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(() => {
                 updateDisplayedItems();
-            }, 150); // 150ms debounce
+            }, 150);
         };
     }
     
@@ -634,7 +673,7 @@ tradeLayout.appendChild(infoDiv);
             yourTrade = []; 
             theirTrade = []; 
             scrollGridsToTop();
-            updateAll();
+            setTimeout(() => updateAll(), 0);
             localStorage.removeItem('ftf-your-trade');
             localStorage.removeItem('ftf-their-trade');
         };
@@ -642,33 +681,32 @@ tradeLayout.appendChild(infoDiv);
     
     if (raritySidebar) {
         raritySidebar.onclick = (e) => {
-        if (e.target.classList.contains('rarity-filter-btn')) {
-            const activeBtn = raritySidebar.querySelector('.rarity-filter-btn.active');
-            if (activeBtn) activeBtn.classList.remove('active');
-            e.target.classList.add('active');
-            currentRarity = e.target.dataset.rarity;
-            updateDisplayedItems();
-        }
-        
-        const shgBtn = e.target.closest('.shg-btn');
-        if (shgBtn) {
-            const val = shgBtn.dataset.shg;
-            const activeShgBtn = raritySidebar.querySelector('.shg-btn.active');
-            
-            if (currentSHG === val) {
-                // Toggle off
-                currentSHG = null;
-                if (activeShgBtn) activeShgBtn.classList.remove('active');
-            } else {
-                // Toggle on
-                if (activeShgBtn) activeShgBtn.classList.remove('active');
-                currentSHG = val;
-                shgBtn.classList.add('active');
+            if (e.target.classList.contains('rarity-filter-btn')) {
+                const activeBtn = raritySidebar.querySelector('.rarity-filter-btn.active');
+                if (activeBtn) activeBtn.classList.remove('active');
+                e.target.classList.add('active');
+                currentRarity = e.target.dataset.rarity;
+                // Defer repaint so button active state renders first
+                setTimeout(() => updateDisplayedItems(), 0);
             }
             
-            updateAll();
-        }
-    };
+            const shgBtn = e.target.closest('.shg-btn');
+            if (shgBtn) {
+                const val = shgBtn.dataset.shg;
+                const activeShgBtn = raritySidebar.querySelector('.shg-btn.active');
+                
+                if (currentSHG === val) {
+                    currentSHG = null;
+                    if (activeShgBtn) activeShgBtn.classList.remove('active');
+                } else {
+                    if (activeShgBtn) activeShgBtn.classList.remove('active');
+                    currentSHG = val;
+                    shgBtn.classList.add('active');
+                }
+                
+                updateAll();
+            }
+        };
     }
 
     init();
