@@ -18,7 +18,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- CONSTANTS ---
-    const LAST_UPDATED = '20 March';
+    const LAST_UPDATED = '22 March';
     const HV_DIVISOR = 40;
     const MAX_SLOTS = 27;
     const MAX_QUANTITY = 100;
