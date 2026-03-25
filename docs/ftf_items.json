@@ -243,7 +243,7 @@
         {"name": "Fruitcake","value": 2,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 57},
         {"name": "Holly Berry","value": 2,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 58},
         {"name": "Cash","value": 1.0,"rarity": "Epic","demand": 0.0,"stability": "stable","rank": 59},
-        {"name": "Red Panda","value": 35.0,"rarity": "Rare","demand": 3.0,"stability": "fluctuating","rank": 1},
+        {"name": "Red Panda","value": 35.0,"rarity": "Rare","demand": 2.5,"stability": "fluctuating","rank": 1},
         {"name": "Blue Star Wrap","value": 25,"rarity": "Rare","demand": 2.0,"stability": "stable","rank": 2},
         {"name": "Pink Star Wrap","value": 25,"rarity": "Rare","demand": 2.0,"stability": "stable","rank": 3},
         {"name": "Sour Candy","value": 25,"rarity": "Rare","demand": 1.5,"stability": "stable","rank": 4},
