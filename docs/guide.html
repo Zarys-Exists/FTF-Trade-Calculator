@@ -36,21 +36,38 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <script>
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
+        if (localStorage.getItem('theme') !== 'light') {
             document.documentElement.classList.add('dark-theme');
         }
     </script>
 </head>
 <body>
     <div class="site-header">
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Open navigation menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
         <h1 class="site-title">Zarys's FTF Calculator</h1>
-        <div class="nav-links">
-            <a href="./" class="nav-link">Trade Calculator</a>
-            <a href="guide.html" class="nav-link active">Use Guide</a>
-            <button id="theme-toggle" class="theme-toggle" title="Toggle Dark Theme">Dark Mode</button>
-        </div>
+        <button id="theme-toggle" class="theme-toggle-icon" title="Toggle Dark Theme" aria-label="Toggle dark mode">
+            <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+        </button>
     </div>
+
+    <div class="nav-drawer-overlay" id="nav-overlay"></div>
+    <nav class="nav-drawer" id="nav-drawer" aria-hidden="true">
+        <div class="nav-drawer-header">Menu</div>
+        <a href="./" class="nav-drawer-link">Trade Calculator</a>
+        <a href="guide.html" class="nav-drawer-link active">Use Guide</a>
+    </nav>
+
     <div class="guide-content">
         <section class="guide-section">
             <h2>Introduction</h2>
@@ -94,8 +111,8 @@
                     <strong>Item Stability:</strong> The border color of an item slot indicates the stability of that item, which relates
                     to the current demand of that item. The colour code for each stability is given below. <br>
                     <span class="stability-color" style="--stability-text-color: var(--stability-label-rising);">Rising</span>
-                    <span class="stability-color" style="--stability-text-color: var(--stability-label-improving);">Improving</span>
-                    <span class="stability-color" style="--stability-text-color: var(--stability-label-doing-well);">Doing Well</span>
+                    <span class="stability-color" style="--stability-text-color: var(--stability-label-improving);">Doing Well</span>
+                    <span class="stability-color" style="--stability-text-color: var(--stability-label-doing-well);">Improving</span>
                     <span class="stability-color" style="--stability-text-color: var(--stability-label-stable);">Stable</span>
                     <span class="stability-color" style="--stability-text-color: var(--stability-label-fluctuating);">Fluctuating</span>
                     <span class="stability-color" style="--stability-text-color: var(--stability-label-struggling);">Struggling</span>
@@ -107,5 +124,60 @@
         </section>
     </div>
     <script src="trade.js"></script>
+    <script>
+        // Hamburger menu logic
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const navDrawer = document.getElementById('nav-drawer');
+        const navOverlay = document.getElementById('nav-overlay');
+
+        function openDrawer() {
+            hamburgerBtn.classList.add('is-open');
+            hamburgerBtn.setAttribute('aria-expanded', 'true');
+            navDrawer.classList.add('is-open');
+            navDrawer.setAttribute('aria-hidden', 'false');
+            navOverlay.classList.add('is-visible');
+            document.body.classList.add('drawer-open');
+        }
+
+        function closeDrawer() {
+            hamburgerBtn.classList.remove('is-open');
+            hamburgerBtn.setAttribute('aria-expanded', 'false');
+            navDrawer.classList.remove('is-open');
+            navDrawer.setAttribute('aria-hidden', 'true');
+            navOverlay.classList.remove('is-visible');
+            document.body.classList.remove('drawer-open');
+        }
+
+        hamburgerBtn.addEventListener('click', () => {
+            hamburgerBtn.classList.contains('is-open') ? closeDrawer() : openDrawer();
+        });
+        navOverlay.addEventListener('click', closeDrawer);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDrawer();
+        });
+
+        // Theme toggle
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const htmlEl = document.documentElement;
+
+        function syncThemeIcon() {
+            if (htmlEl.classList.contains('dark-theme')) {
+                themeToggleBtn.classList.add('is-dark');
+            } else {
+                themeToggleBtn.classList.remove('is-dark');
+            }
+        }
+        syncThemeIcon();
+
+        themeToggleBtn.addEventListener('click', () => {
+            const isDark = htmlEl.classList.toggle('dark-theme');
+            if (isDark) {
+                localStorage.removeItem('theme');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+            syncThemeIcon();
+        });
+    </script>
 </body>
 </html>

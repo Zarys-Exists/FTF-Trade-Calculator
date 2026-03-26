@@ -56,20 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Critical DOM elements missing. Check HTML structure.');
     }
 
-    // --- THEME LOGIC ---
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        htmlElement.classList.add('dark-theme');
-        if (themeToggle) themeToggle.textContent = 'Light Mode';
-    }
     
-    if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
-            const isDark = htmlElement.classList.toggle('dark-theme');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            themeToggle.textContent = isDark ? 'Light Mode' : 'Dark Mode';
-        });
-    }
 
     // --- INFO LINES (Last Updated) ---
     const lastUpdatedElement = document.getElementById('last-updated');
@@ -84,8 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (stabilityLower === 'stable') return null;
         if (stabilityLower.includes('rising')) return 'rising';
-        if (stabilityLower.includes('improving')) return 'improving';
         if (stabilityLower.includes('doing well')) return 'doing-well';
+        if (stabilityLower.includes('improving')) return 'improving';
         if (stabilityLower.includes('dropping')) return 'dropping';
         if (stabilityLower.includes('struggling')) return 'struggling';
         if (stabilityLower.includes('fluctuating')) return 'fluctuating';
