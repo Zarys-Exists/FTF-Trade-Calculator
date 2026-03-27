@@ -336,7 +336,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (Math.abs(diff) < 0.01) {
             resultEl.textContent = 'Fair';
             resultEl.classList.add('wfl-result-fair');
-            resultEl.setAttribute('data-difference', '0');
         } else {
             const isWin = diff > 0;
             const modeLabel = modeHV ? 'hv' : 'fv';
@@ -344,8 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
             resultEl.innerHTML = `${displayDiff}<br><span class="wfl-mode">${modeLabel} ${isWin ? 'Win' : 'Loss'}</span>`;
             resultEl.classList.add(isWin ? 'wfl-result-win' : 'wfl-result-lose');
         }
-        
-        resultEl.setAttribute('data-difference', diff);
     }
 
     // --- MODAL & LAZY LOADING ---
