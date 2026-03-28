@@ -1,21 +1,3 @@
-(function() {
-    if (window.top !== window.self && window.location.hostname !== "localhost") {
-        const u = "https://zarys-exists.github.io/FTF-Trade-Calculator/";
-        try {
-            window.top.location.replace(u + "?r=ftfblog");
-        } catch (e) {
-            document.body.innerHTML = `
-                <div style="font-family: sans-serif; text-align: center; padding-top: 50px;">
-                    <h1>Unauthorized Access</h1>
-                    <p>Please use the official site:</p>
-                    <a href="${u}?m=ftfblog" style="color: #007bff; text-decoration: none; font-weight: bold;">
-                        zarys-exists.github.io/FTF-Trade-Calculator/
-                    </a>
-                </div>`;
-        }
-    }
-})();
-
 document.addEventListener('DOMContentLoaded', () => {
     // --- CONSTANTS ---
     const LAST_UPDATED = '28 March';
@@ -31,8 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let modeHV = false;
     let currentSHG = null;
     let currentRarity = 'all';
-    let shgExceptions8020 = new Set();
-    let shgExceptionsFull = new Set();
 
     // Lazy loading state
     let filteredItemCache = [];
@@ -64,58 +44,14 @@ document.addEventListener('DOMContentLoaded', () => {
         lastUpdatedElement.textContent = LAST_UPDATED;
     }
 
-    // --- UTILITY FUNCTIONS ---
-    function parseStabilityType(stability) {
-        if (!stability) return null;
-        const stabilityLower = stability.toLowerCase().replace(/_/g, ' ');
-        
-        if (stabilityLower === 'stable') return null;
-        if (stabilityLower.includes('rising')) return 'rising';
-        if (stabilityLower.includes('doing well')) return 'doing-well';
-        if (stabilityLower.includes('improving')) return 'improving';
-        if (stabilityLower.includes('dropping')) return 'dropping';
-        if (stabilityLower.includes('struggling')) return 'struggling';
-        if (stabilityLower.includes('fluctuating')) return 'fluctuating';
-        if (stabilityLower.includes('receding')) return 'receding';
-        
-        return null;
-    }
 
-    function scrollGridsToTop() {
-        yourGrid.scrollTop = 0;
-        theirGrid.scrollTop = 0;
-    }
-
-    // --- CORE CALCULATIONS ---
-    function calculateItemValue(item) {
-        if (item.isAdds) {
-            return item.quantity || 0;
-        }
-        
-        let baseVal = Number(item.baseValue) || 0;
-        const nameKey = (item.name || '').toLowerCase();
-        const rarity = (item.rarity || '').toLowerCase();
-        const itemSHG = item.shg || null;
-        
-        if (shgExceptionsFull.has(nameKey)) return baseVal;
-
-        if (rarity === 'legendary' && itemSHG) {
-            return itemSHG === 'h' ? baseVal * 0.7 : baseVal * 0.3;
-        }
-        if (['epic', 'rare', 'common'].includes(rarity) && itemSHG) {
-            if (shgExceptions8020.has(nameKey)) {
-                return itemSHG === 'g' ? baseVal * 0.8 : baseVal * 0.2;
-            }
-            return baseVal * 0.5;
-        }
-        return baseVal;
-    }
 
     function formatNumberForDisplay(n, isAdds = false) {
-        const num = (modeHV && !isAdds) ? n / HV_DIVISOR : n;
-        if (modeHV && !isAdds) return num.toFixed(3).replace(/\.?0+$/, '');
-        if (num < 5 && num % 1 !== 0) return num.toFixed(1);
-        return Math.round(num).toLocaleString();
+        if (modeHV && !isAdds) {
+            const num = n / HV_DIVISOR;
+            return num.toFixed(3).replace(/\.?0+$/, '');
+        }
+        return window.FTFData.formatFV(n);
     }
 
     // --- SMART RENDERING ---
@@ -181,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (item.stabilityType) {
                         slot.dataset.stability = item.stabilityType;
                     }
-                    if (item.shg && shouldShowSHGIndicator(item)) {
+                    if (item.shg && window.FTFData.shouldShowSHGBadge(item)) {
                         slot.dataset.shg = item.shg;
                     }
 
@@ -257,19 +193,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function shouldShowSHGIndicator(item) {
-        const nameKey = (item.name || '').toLowerCase();
-        const rarity = (item.rarity || '').toLowerCase();
-        if (shgExceptionsFull.has(nameKey)) return false;
-        if (rarity === 'legendary') return true;
-        if (['epic', 'rare', 'common'].includes(rarity)) return true;
-        return false;
+    // --- CORE CALCULATIONS ---
+    function scrollGridsToTop() {
+        yourGrid.scrollTop = 0;
+        theirGrid.scrollTop = 0;
     }
 
     function updateTotalsOnly() {
         const yourTradeValue = yourTrade.reduce((sum, item) => {
             if (item.isAdds) return sum;
-            return sum + (calculateItemValue(item) * item.quantity);
+            return sum + (window.FTFData.calculateItemValue(item) * item.quantity);
         }, 0);
         const yourAddsValue = yourTrade.reduce((sum, item) => {
             if (!item.isAdds) return sum;
@@ -278,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const theirTradeValue = theirTrade.reduce((sum, item) => {
             if (item.isAdds) return sum;
-            return sum + (calculateItemValue(item) * item.quantity);
+            return sum + (window.FTFData.calculateItemValue(item) * item.quantity);
         }, 0);
         const theirAddsValue = theirTrade.reduce((sum, item) => {
             if (!item.isAdds) return sum;
@@ -333,14 +266,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const theirFormattedTotal = theirTradeFormatted + theirAddsVal;
         fillBar.style.width = `${(yourFormattedTotal / (yourFormattedTotal + theirFormattedTotal)) * 100}%`;
         
-        if (Math.abs(diff) < 0.01) {
+        const absDiff = Math.abs(diff);
+        const displayDiffValue = modeHV ? Number(absDiff.toFixed(3)) : absDiff;
+        
+        if (displayDiffValue === 0) {
             resultEl.textContent = 'Fair';
             resultEl.classList.add('wfl-result-fair');
         } else {
             const isWin = diff > 0;
             const modeLabel = modeHV ? 'hv' : 'fv';
-            const displayDiff = modeHV ? Math.abs(diff).toFixed(3).replace(/\.?0+$/, '') : Math.round(Math.abs(diff)).toLocaleString();
-            resultEl.innerHTML = `${displayDiff}<br><span class="wfl-mode">${modeLabel} ${isWin ? 'Win' : 'Loss'}</span>`;
+            const displayDiffStr = modeHV ? displayDiffValue.toString() : window.FTFData.formatFV(displayDiffValue);
+            resultEl.innerHTML = `${displayDiffStr}<br><span class="wfl-mode">${modeLabel} ${isWin ? 'Win' : 'Loss'}</span>`;
             resultEl.classList.add(isWin ? 'wfl-result-win' : 'wfl-result-lose');
         }
     }
@@ -407,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="modal-item-name">${item.name}</div>`;
         
         div.onclick = () => {
-            const stabilityType = parseStabilityType(item.stability);
+            const stabilityType = window.FTFData.parseStabilityType(item.stability);
             activeArray.push({ 
                 ...item, 
                 baseValue: item.value, 
@@ -445,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Defer item list build so modal paint happens first
         setTimeout(() => updateDisplayedItems(), 0);
         
-        if (searchInput) {
+        if (searchInput && window.innerWidth > 768) {
             setTimeout(() => searchInput.focus(), 100);
         }
     }
@@ -578,26 +514,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAll();
         
         try {
-            const [itemResp, exResp] = await Promise.all([
-                fetch('ftf_items.json'),
-                fetch('shg_exceptions.json').catch(() => null)
-            ]);
-            
-            if (!itemResp.ok) throw new Error('Failed to load items');
-            
-            const data = await itemResp.json();
-            allItems = data.items;
-
-            if (exResp && exResp.ok) {
-                const exData = await exResp.json();
-                shgExceptions8020 = new Set(exData.exceptions_80_20.map(s => s.toLowerCase()));
-                shgExceptionsFull = new Set(exData.exceptions_full.map(s => s.toLowerCase()));
-            }
-            
+            await window.FTFData.init();
+            allItems = window.FTFData.allItems;
             updateAll();
         } catch (e) { 
             console.error('Initialization error:', e);
-            window.itemLoadError = e.message;
         }
     }
 
