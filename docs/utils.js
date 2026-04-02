@@ -67,10 +67,7 @@ window.FTFData = {
     },
 
     shouldShowSHGBadge: function(item) {
-        // Only if it's not a generic Adds item
         if (item.isAdds) return false;
-        
-        // Using common logic unifying both files
         if (item.shg && !item.rarity) return false; 
         
         const nameKey = (item.name || '').toLowerCase();

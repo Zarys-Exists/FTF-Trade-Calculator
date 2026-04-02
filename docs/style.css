@@ -513,6 +513,7 @@ body.drawer-open {
     padding: 0.25rem;
     position: relative;
     overflow: hidden;
+    aspect-ratio: 1 / 1;
 }
 
 .item-slot[data-shg="h"]::before,
@@ -796,7 +797,7 @@ body.drawer-open {
 
 #wfl-result {
     font-size: 2.2rem;
-    font-weight: 800;
+    font-weight: 700;
     padding: 0.5rem 0.25rem;
     border-radius: 0.5rem;
     transition: all 0.3s ease;

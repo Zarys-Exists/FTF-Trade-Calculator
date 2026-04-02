@@ -36,10 +36,12 @@
     <link rel="manifest" href="favicon/site.webmanifest">
     <script>
         const base = document.createElement('base');
-        if (!location.hostname.includes('localhost') && !location.hostname.includes('127.0.0.1')) {
-            base.href = '/FTF-Trade-Calculator/';
-        } else {
+        // Use root path for localhost, ngrok, or any local/development domains
+        if (location.hostname.includes('localhost') || location.hostname.includes('127.0.0.1') || location.hostname.includes('ngrok')) {
             base.href = '/';
+        } else {
+            // Use GitHub Pages path for production
+            base.href = '/FTF-Trade-Calculator/';
         }
         document.head.appendChild(base);
     </script>

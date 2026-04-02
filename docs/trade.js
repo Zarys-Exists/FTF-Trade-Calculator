@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     slot.innerHTML = `
                         <div class="item-slot-content">
                             <div class="item-slot-img" style="display: flex; align-items: center; justify-content: center;">
-                                <svg viewBox="0 0 24 24" style="width: 70%; height: 70%;" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                                <svg viewBox="0 0 24 24" style="width: 70%; height: 70%; min-width: 0;" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
                                 </svg>
