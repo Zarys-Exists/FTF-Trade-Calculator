@@ -329,7 +329,7 @@
         {"id":"R084","name":"Secret Santa","value":2,"rarity":"Rare","demand":0.5,"stability":"stable","rank":84},
         {"id":"R085","name":"Sugar Cookies","value":2,"rarity":"Rare","demand":0.5,"stability":"stable","rank":85},
         {"id":"R086","name":"Sunset Beach","value":2,"rarity":"Rare","demand":0.5,"stability":"stable","rank":86},
-        {"id":"R087","name":"YIn & Yang","value":2,"rarity":"Rare","demand":0,"stability":"stable","rank":87},
+        {"id":"R087","name":"Yin & Yang","value":2,"rarity":"Rare","demand":0,"stability":"stable","rank":87},
         {"id":"C001","name":"Bleak Ink","value":100,"rarity":"Common","demand":2.5,"stability":"stable","rank":1},
         {"id":"C002","name":"Aurora","value":30,"rarity":"Common","demand":2,"stability":"stable","rank":2},
         {"id":"C003","name":"Cherry Pie","value":30,"rarity":"Common","demand":2,"stability":"stable","rank":3},
