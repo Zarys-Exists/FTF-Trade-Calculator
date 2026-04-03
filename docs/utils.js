@@ -88,5 +88,28 @@ window.FTFData = {
             return rounded.toFixed(1);
         }
         return Math.round(num).toLocaleString();
+    },
+
+    // --- ITEM ID MAPS ---
+    _itemIdMap: {},
+    _itemNameMap: {},
+
+    buildItemMaps: function() {
+        this._itemIdMap = {};
+        this._itemNameMap = {};
+        this.allItems.forEach(function(item) {
+            if (item.id) {
+                this._itemIdMap[item.name] = item.id;
+                this._itemNameMap[item.id] = item;
+            }
+        }, this);
+    },
+
+    getIdByName: function(name) {
+        return this._itemIdMap[name] || null;
+    },
+
+    getItemById: function(id) {
+        return this._itemNameMap[id] || null;
     }
 };

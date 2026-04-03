@@ -132,6 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveInventory() {
         try { localStorage.setItem('ftf-inventory', JSON.stringify(inventory)); }
         catch (e) { console.error('Failed to save inventory:', e); }
+        if (window.FTFAuth?.user && window.FTFAuth?.profile) {
+            window.FTFAuth.saveInventoryToCloud(inventory);
+        }
     }
     function loadInventory() {
         try {
@@ -139,10 +142,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (saved) inventory = JSON.parse(saved);
         } catch (e) { inventory = []; }
     }
+    async function loadInventoryFromCloud() {
+        if (!window.FTFAuth?.user || !window.FTFAuth?.profile) return false;
+        try {
+            const cloud = await window.FTFAuth.loadInventoryFromCloud();
+            if (cloud && cloud.length > 0) {
+                inventory = cloud;
+                localStorage.setItem('ftf-inventory', JSON.stringify(inventory));
+                return true;
+            }
+        } catch (e) { console.error('Cloud load failed:', e); }
+        return false;
+    }
 
     function saveNote() {
         try { if (invNoteEl) localStorage.setItem('ftf-inv-note', invNoteEl.value); }
         catch (e) { console.error('Failed to save note:', e); }
+        if (window.FTFAuth?.user && window.FTFAuth?.profile && invNoteEl) {
+            window.FTFAuth.saveNoteToCloud(invNoteEl.value);
+        }
     }
     function loadNote() {
         try {
@@ -152,6 +170,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 invNoteEl.dispatchEvent(new Event('input'));
             }
         } catch (e) { console.error('Failed to load note:', e); }
+    }
+    async function loadNoteFromCloud() {
+        if (!window.FTFAuth?.user || !window.FTFAuth?.profile) return;
+        try {
+            const note = await window.FTFAuth.loadNoteFromCloud();
+            if (note !== null && invNoteEl) {
+                invNoteEl.value = note;
+                invNoteEl.dispatchEvent(new Event('input'));
+                localStorage.setItem('ftf-inv-note', note);
+            }
+        } catch (e) { console.error('Cloud note load failed:', e); }
     }
 
     function saveSortOptions() {
@@ -349,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const input = card.querySelector('.qty-input');
         card.querySelector('.inc').onclick = () => {
             item.quantity = Math.min(100, (item.quantity || 1) + 1);
-            if (normalizeInventory()) { saveInventory(); renderInventory(); } 
+            if (normalizeInventory()) { saveInventory(); renderInventory(); }
             else { input.value = item.quantity; valSpan.textContent = updateCardValue(item.quantity); saveInventory(); updateStats(); }
         };
         card.querySelector('.dec').onclick = () => {
@@ -398,15 +427,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (hItem && gItem && hItem.quantity > 0 && gItem.quantity > 0) {
                 changed = true;
                 const pairs = Math.min(hItem.quantity, gItem.quantity);
-                
+
                 if (!setItem) {
                     setItem = { ...hItem, shg: null, quantity: 0 };
                     inventory.push(setItem);
                 }
-                
+
                 const room = Math.max(0, 100 - setItem.quantity);
                 const toAdd = Math.min(pairs, room);
-                
+
                 setItem.quantity += toAdd;
                 hItem.quantity -= pairs;
                 gItem.quantity -= pairs;
@@ -429,11 +458,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const ownedNames = [];
 
         inventory.forEach(i => {
-             if (i.shg === null) {
-                 totalUnique += 1;
-                 totalQty += (i.quantity || 1);
-                 ownedNames.push(i.name);
-             }
+            if (i.shg === null) {
+                totalUnique += 1;
+                totalQty += (i.quantity || 1);
+                ownedNames.push(i.name);
+            }
         });
 
         if (statUniqueItems) statUniqueItems.textContent = totalUnique.toLocaleString();
@@ -449,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const nameGroups = {};
         inventory.forEach(i => {
-           if (i.shg === null) nameGroups[i.name] = { rarity: i.rarity };
+            if (i.shg === null) nameGroups[i.name] = { rarity: i.rarity };
         });
 
         updateRarityCompletion(ownedNames, nameGroups);
@@ -1000,13 +1029,54 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await window.FTFData.init();
             allItems = window.FTFData.allItems;
+            window.FTFData.buildItemMaps();
+            if (window.FTFAuth) window.FTFAuth.buildItemMaps();
             syncInventoryValues();
             renderInventory();
-        } catch (e) { 
+        } catch (e) {
             console.error('Inventory init error:', e);
             showAlert({
                 title: 'Database Sync Error',
                 message: 'We could not sync the latest item values. Your local inventory is still visible but values may be outdated.'
+            });
+        }
+
+        // Auth state callback — reload inventory from cloud on sign-in/out
+        window._onAuthChange = async (user) => {
+            if (user && window.FTFAuth?.profile) {
+                if (window.FTFData?.allItems?.length) {
+                    window.FTFData.buildItemMaps();
+                    window.FTFAuth.buildItemMaps();
+                }
+                const loaded = await loadInventoryFromCloud();
+                if (loaded) {
+                    syncInventoryValues();
+                }
+                await loadNoteFromCloud();
+                renderInventory();
+            } else {
+                // Signed out — reload from localStorage
+                loadInventory();
+                loadNote();
+                renderInventory();
+            }
+        };
+
+        // If already signed in (page reload with existing session), load cloud data
+        if (window.FTFAuth) {
+            window.FTFAuth.onReady(async () => {
+                if (window.FTFAuth.user && window.FTFAuth.profile) {
+                    if (window.FTFData?.allItems?.length) {
+                        window.FTFData.buildItemMaps();
+                        window.FTFAuth.buildItemMaps();
+                    }
+                    const loaded = await loadInventoryFromCloud();
+                    if (loaded) {
+                        syncInventoryValues();
+                    }
+                    await loadNoteFromCloud();
+                    renderInventory();
+                }
             });
         }
     }

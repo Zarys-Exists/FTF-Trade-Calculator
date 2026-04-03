@@ -13,3 +13,5 @@ dist/
 build/
 .pytest_cache/
 docs/app.py
+skills-lock.json
+.agents/
