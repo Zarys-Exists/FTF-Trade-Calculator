@@ -12,6 +12,7 @@
         profile: null,
         itemIdMap: {},
         itemNameMap: {},
+        _cloudSnapshot: null, // Map<`${item_id}|${shg}`, {qty}> — last known cloud state
         _ready: false,
         _readyCallbacks: [],
 
@@ -163,33 +164,74 @@
             cloudSaveTimer = setTimeout(async () => {
                 this._setSyncStatus('saving');
                 try {
-                    // Delete existing inventory, then bulk insert
-                    await this.supabase
-                        .from('user_inventory')
-                        .delete()
-                        .eq('user_id', this.user.id);
+                    // Build new row map keyed by `${item_id}|${shg}`
+                    const newRowMap = new Map();
+                    for (const item of inventory) {
+                        const itemId = this.itemIdMap[item.name];
+                        if (!itemId) continue;
+                        const shg = (item.shg || '').trim();
+                        newRowMap.set(`${itemId}|${shg}`, {
+                            user_id: this.user.id,
+                            item_id: itemId,
+                            qty: item.quantity || 1,
+                            shg
+                        });
+                    }
 
-                    if (inventory.length > 0) {
-                        const rows = inventory
-                            .map(item => {
-                                const itemId = this.itemIdMap[item.name];
-                                if (!itemId) return null;
-                                return {
-                                    user_id: this.user.id,
-                                    item_id: itemId,
-                                    qty: item.quantity || 1,
-                                    shg: item.shg || ''
-                                };
-                            })
-                            .filter(Boolean);
+                    const snapshot = this._cloudSnapshot || new Map();
+                    const toUpsert = [];
+                    const toDeleteKeys = [];
 
-                        if (rows.length > 0) {
+                    // Rows to upsert: new entries or changed quantity
+                    for (const [key, row] of newRowMap) {
+                        const prev = snapshot.get(key);
+                        if (!prev || prev.qty !== row.qty) toUpsert.push(row);
+                    }
+
+                    // Rows to delete: present in snapshot but removed from inventory
+                    for (const key of snapshot.keys()) {
+                        if (!newRowMap.has(key)) toDeleteKeys.push(key);
+                    }
+
+                    // Nothing actually changed — skip
+                    if (toUpsert.length === 0 && toDeleteKeys.length === 0) {
+                        this._setSyncStatus('synced');
+                        return;
+                    }
+
+                    // Upsert only changed/new rows
+                    if (toUpsert.length > 0) {
+                        const { error } = await this.supabase
+                            .from('user_inventory')
+                            .upsert(toUpsert, { onConflict: 'user_id,item_id,shg' });
+                        if (error) throw error;
+                    }
+
+                    // Delete removed rows
+                    if (newRowMap.size === 0) {
+                        // Entire inventory cleared, single delete call
+                        const { error } = await this.supabase
+                            .from('user_inventory')
+                            .delete()
+                            .eq('user_id', this.user.id);
+                        if (error) throw error;
+                    } else {
+                        for (const key of toDeleteKeys) {
+                            const [item_id, shg] = key.split('|');
                             const { error } = await this.supabase
                                 .from('user_inventory')
-                                .insert(rows);
+                                .delete()
+                                .eq('user_id', this.user.id)
+                                .eq('item_id', item_id)
+                                .eq('shg', shg);
                             if (error) throw error;
                         }
                     }
+
+                    // Update snapshot to reflect new cloud state
+                    this._cloudSnapshot = new Map(
+                        [...newRowMap.entries()].map(([k, r]) => [k, { qty: r.qty }])
+                    );
                     this._setSyncStatus('synced');
                 } catch (e) {
                     console.error('Cloud save error:', e.message);
@@ -209,7 +251,18 @@
                     .eq('user_id', this.user.id);
 
                 if (error) throw error;
-                if (!data || data.length === 0) return [];
+                if (!data || data.length === 0) {
+                    this._cloudSnapshot = new Map();
+                    return [];
+                }
+
+                // Seed snapshot from loaded cloud data so saves can diff against it
+                this._cloudSnapshot = new Map(
+                    data.map(row => {
+                        const shg = (row.shg || '').trim();
+                        return [`${row.item_id}|${shg}`, { qty: row.qty }];
+                    })
+                );
 
                 return data
                     .map(row => {
