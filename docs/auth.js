@@ -107,8 +107,8 @@
                 .from('profiles')
                 .select('username, discord_username, created_at')
                 .eq('id', this.user.id)
-                .single();
-            if (error && error.code !== 'PGRST116') {
+                .maybeSingle();
+            if (error) {
                 console.error('Get profile error:', error.message);
             }
             this.profile = data || null;
@@ -309,8 +309,8 @@
                     .from('user_notes')
                     .select('note')
                     .eq('user_id', this.user.id)
-                    .single();
-                if (error && error.code !== 'PGRST116') throw error;
+                    .maybeSingle();
+                if (error) throw error;
                 return data?.note ?? null;
             } catch (e) {
                 console.error('Note load error:', e.message);
