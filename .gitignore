@@ -16,5 +16,4 @@ docs/app.py
 skills-lock.json
 .agents/
 node_modules/
-fix-permissions.js
-migrate.js
+migration.js

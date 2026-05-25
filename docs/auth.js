@@ -1,53 +1,79 @@
-// docs/auth.js — Supabase Auth & Cloud Sync Module
+// docs/auth.js — Appwrite Auth & Cloud Sync Module
 (function () {
-    const SUPABASE_URL = 'https://uoffsenmogzlurhhhyru.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvZmZzZW5tb2d6bHVyaGhoeXJ1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMjA4OTYsImV4cCI6MjA5MDc5Njg5Nn0.tVoPzvAm7BnKQAsvT1y-ugELYgimFBWUxrCvWkf4l5I';
+    const APPWRITE_ENDPOINT = 'https://nyc.cloud.appwrite.io/v1';
+    const APPWRITE_PROJECT_ID = '69fc78bc00097545b573';
+    const DB_ID = 'ftf_db';
+    const COL_PROFILES = 'profiles';
+    const COL_INVENTORY = 'user_inventory';
+    const COL_NOTES = 'user_notes';
 
     let cloudSaveTimer = null;
     let noteSaveTimer = null;
 
+    // Appwrite SDK references (set after SDK loads)
+    let client, account, databases, Query;
+
     window.FTFAuth = {
-        supabase: null,
         user: null,
         profile: null,
         itemIdMap: {},
         itemNameMap: {},
-        _cloudSnapshot: null, // Map<`${item_id}|${shg}`, {qty}> — last known cloud state
         _ready: false,
         _readyCallbacks: [],
 
         // --- INIT ---
         init() {
-            if (typeof supabase === 'undefined' || !supabase.createClient) {
-                console.warn('Supabase JS not loaded — auth disabled');
+            // Detect SDK namespace
+            const SDK = window.Appwrite || window;
+            if (typeof SDK.Client === 'undefined') {
+                console.warn('[FTFAuth] Appwrite SDK not loaded — auth disabled');
+                this._notifyReady();
                 return;
             }
-            this.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            this.supabase.auth.onAuthStateChange((event, session) => {
-                const prevUser = this.user;
-                this.user = session?.user || null;
-                this.updateAuthUI();
+            client = new SDK.Client()
+                .setEndpoint(APPWRITE_ENDPOINT)
+                .setProject(APPWRITE_PROJECT_ID);
 
-                if (event === 'SIGNED_IN' && this.user) {
-                    this._handleSignIn();
-                } else if (event === 'SIGNED_OUT') {
-                    this.profile = null;
-                    this._notifyReady();
-                    if (typeof window._onAuthChange === 'function') window._onAuthChange(null);
-                }
-            });
+            account = new SDK.Account(client);
+            databases = new SDK.Databases(client);
+            Query = SDK.Query;
 
-            // Check existing session
-            this.supabase.auth.getSession().then(({ data: { session } }) => {
-                this.user = session?.user || null;
-                this.updateAuthUI();
-                if (this.user) {
-                    this._handleSignIn();
-                } else {
-                    this._notifyReady();
-                }
-            });
+            // Handle Appwrite OAuth fallback (when third-party cookies are blocked)
+            const params = new URLSearchParams(window.location.search);
+            const oauthUserId = params.get('userId');
+            const oauthSecret = params.get('secret');
+
+            if (oauthUserId && oauthSecret) {
+                // Clear the secrets from the URL immediately so they aren't visible
+                window.history.replaceState({}, '', window.location.pathname);
+
+                account.createSession(oauthUserId, oauthSecret)
+                    .then(() => account.get())
+                    .then(user => {
+                        this.user = user;
+                        this.updateAuthUI();
+                        this._handleSignIn();
+                    })
+                    .catch(err => {
+                        this.user = null;
+                        this.updateAuthUI();
+                        this._notifyReady();
+                    });
+            } else {
+                // Normal page load — check for an existing session
+                account.get()
+                    .then(user => {
+                        this.user = user;
+                        this.updateAuthUI();
+                        this._handleSignIn();
+                    })
+                    .catch((err) => {
+                        this.user = null;
+                        this.updateAuthUI();
+                        this._notifyReady();
+                    });
+            }
         },
 
         async _handleSignIn() {
@@ -82,191 +108,193 @@
 
         // --- AUTH ACTIONS ---
         async signInWithDiscord() {
-            if (!this.supabase) return;
-            const redirectTo = window.location.href.split('#')[0].split('?')[0];
-            const { error } = await this.supabase.auth.signInWithOAuth({
-                provider: 'discord',
-                options: { redirectTo }
-            });
-            if (error) console.error('Discord sign-in error:', error.message);
+            if (!account) return;
+            // Provide the current URL as both success and failure redirects
+            const origin = window.location.href.split('#')[0].split('?')[0];
+            
+            try {
+                // Using createOAuth2Token instead of Session. 
+                // This forces Appwrite to return userId and secret in the URL, bypassing 3rd-party cookie blocks.
+                account.createOAuth2Token('discord', origin, origin);
+            } catch (err) {
+                console.error('[FTFAuth] Redirect to Discord failed:', err);
+            }
         },
 
         async signOut() {
-            if (!this.supabase) return;
-            const { error } = await this.supabase.auth.signOut();
-            if (error) console.error('Sign out error:', error.message);
+            if (!account) return;
+            try {
+                await account.deleteSession('current');
+            } catch (e) {
+                console.error('Sign out error:', e.message);
+            }
             this.user = null;
             this.profile = null;
             this.updateAuthUI();
+            if (typeof window._onAuthChange === 'function') window._onAuthChange(null);
         },
 
         // --- PROFILE ---
         async getProfile() {
-            if (!this.supabase || !this.user) return null;
-            const { data, error } = await this.supabase
-                .from('profiles')
-                .select('username, discord_username, created_at')
-                .eq('id', this.user.id)
-                .maybeSingle();
-            if (error) {
-                console.error('Get profile error:', error.message);
+            if (!databases || !this.user) return null;
+            try {
+                // Query by user_id because migrated profiles have random Document IDs
+                const response = await databases.listDocuments(DB_ID, COL_PROFILES, [
+                    Query.equal('user_id', this.user.$id),
+                    Query.limit(1)
+                ]);
+
+                if (response.documents.length > 0) {
+                    const doc = response.documents[0];
+                    this._profileDocId = doc.$id; // Save real document ID for updates
+                    this.profile = {
+                        username: doc.username,
+                        discord_username: doc.discord_username,
+                        created_at: doc.$createdAt,
+                    };
+                } else {
+                    this.profile = null;
+                }
+            } catch (e) {
+                this.profile = null;
             }
-            this.profile = data || null;
             this.updateAuthUI();
             return this.profile;
         },
 
         async createProfile(username) {
-            if (!this.supabase || !this.user) return { error: 'Not authenticated' };
-            const discordName = this._getDiscordUsername();
-            const { data, error } = await this.supabase
-                .from('profiles')
-                .insert({ id: this.user.id, username, discord_username: discordName })
-                .select('username, discord_username, created_at')
-                .single();
-            if (error) {
-                if (error.code === '23505') return { error: 'Username already taken' };
-                return { error: error.message };
+            if (!databases || !this.user) return { error: 'Not authenticated' };
+            const discordName = this._getDiscordUsername() || '';
+            try {
+                const doc = await databases.createDocument(
+                    DB_ID,
+                    COL_PROFILES,
+                    this.user.$id,  // Use uid as document ID — enforces one-per-user
+                    { 
+                        user_id: this.user.$id, 
+                        username: username, 
+                        discord_username: discordName 
+                    }
+                );
+                this.profile = {
+                    username: doc.username,
+                    discord_username: doc.discord_username,
+                    created_at: doc.$createdAt,
+                };
+                this._profileDocId = doc.$id;
+                this.updateAuthUI();
+                this._notifyReady();
+                if (typeof window._onAuthChange === 'function') window._onAuthChange(this.user);
+                return { error: null };
+            } catch (e) {
+                if (e.code === 409) return { error: 'Username already taken' };
+                return { error: e.message };
             }
-            this.profile = data;
-            this.updateAuthUI();
-            this._notifyReady();
-            if (typeof window._onAuthChange === 'function') window._onAuthChange(this.user);
-            return { error: null };
         },
 
         _getDiscordUsername() {
             if (!this.user) return null;
-            const meta = this.user.user_metadata || {};
-            // Discord via Supabase: full_name = actual username (e.g. "zvarys")
-            // custom_claims.global_name = display name (e.g. "Zarys") — NOT what we want
-            return meta.full_name || meta.user_name || meta.preferred_username || null;
+            // Appwrite stores OAuth provider metadata in prefs or the user object directly.
+            // Discord's username is surfaced under the user's name field from OAuth.
+            return this.user.name || null;
         },
 
         async _syncDiscordUsername() {
-            if (!this.supabase || !this.user || !this.profile) return;
+            if (!databases || !this.user || !this.profile || !this._profileDocId) return;
             const discordName = this._getDiscordUsername();
             if (discordName && discordName !== this.profile.discord_username) {
-                await this.supabase
-                    .from('profiles')
-                    .update({ discord_username: discordName })
-                    .eq('id', this.user.id);
-                this.profile.discord_username = discordName;
+                try {
+                    await databases.updateDocument(DB_ID, COL_PROFILES, this._profileDocId, {
+                        discord_username: discordName
+                    });
+                    this.profile.discord_username = discordName;
+                } catch (e) {
+                    console.warn('Could not sync Discord username:', e.message);
+                }
             }
         },
 
         // --- INVENTORY CLOUD SYNC ---
         async saveInventoryToCloud(inventory) {
-            if (!this.supabase || !this.user || !this.profile) return;
+            if (!databases || !this.user || !this.profile) return;
             if (Object.keys(this.itemIdMap).length === 0) this.buildItemMaps();
 
             clearTimeout(cloudSaveTimer);
             cloudSaveTimer = setTimeout(async () => {
                 this._setSyncStatus('saving');
                 try {
-                    // Build new row map keyed by `${item_id}|${shg}`
-                    const newRowMap = new Map();
+                    // Build the items array: each entry is "itemId|qty|shg"
+                    const items = [];
                     for (const item of inventory) {
                         const itemId = this.itemIdMap[item.name];
                         if (!itemId) continue;
                         const shg = (item.shg || '').trim();
-                        newRowMap.set(`${itemId}|${shg}`, {
-                            user_id: this.user.id,
-                            item_id: itemId,
-                            qty: item.quantity || 1,
-                            shg
-                        });
+                        items.push(`${itemId}|${item.quantity || 1}|${shg}`);
                     }
 
-                    const snapshot = this._cloudSnapshot || new Map();
-                    const toUpsert = [];
-                    const toDeleteKeys = [];
-
-                    // Rows to upsert: new entries or changed quantity
-                    for (const [key, row] of newRowMap) {
-                        const prev = snapshot.get(key);
-                        if (!prev || prev.qty !== row.qty) toUpsert.push(row);
-                    }
-
-                    // Rows to delete: present in snapshot but removed from inventory
-                    for (const key of snapshot.keys()) {
-                        if (!newRowMap.has(key)) toDeleteKeys.push(key);
-                    }
-
-                    // Nothing actually changed — skip
-                    if (toUpsert.length === 0 && toDeleteKeys.length === 0) {
-                        this._setSyncStatus('synced');
-                        return;
-                    }
-
-                    // Upsert only changed/new rows
-                    if (toUpsert.length > 0) {
-                        const { error } = await this.supabase
-                            .from('user_inventory')
-                            .upsert(toUpsert, { onConflict: 'user_id,item_id,shg' });
-                        if (error) throw error;
-                    }
-
-                    // Delete removed rows
-                    if (newRowMap.size === 0) {
-                        // Entire inventory cleared, single delete call
-                        const { error } = await this.supabase
-                            .from('user_inventory')
-                            .delete()
-                            .eq('user_id', this.user.id);
-                        if (error) throw error;
-                    } else {
-                        for (const key of toDeleteKeys) {
-                            const [item_id, shg] = key.split('|');
-                            const { error } = await this.supabase
-                                .from('user_inventory')
-                                .delete()
-                                .eq('user_id', this.user.id)
-                                .eq('item_id', item_id)
-                                .eq('shg', shg);
-                            if (error) throw error;
-                        }
-                    }
-
-                    // Update snapshot to reflect new cloud state
-                    this._cloudSnapshot = new Map(
-                        [...newRowMap.entries()].map(([k, r]) => [k, { qty: r.qty }])
-                    );
+                    // Single atomic write — replaces the entire inventory document
+                    await databases.updateDocument(DB_ID, COL_INVENTORY, this.user.$id, { items });
                     this._setSyncStatus('synced');
                 } catch (e) {
-                    console.error('Cloud save error:', e.message);
-                    this._setSyncStatus('error');
+                    if (e.code === 404) {
+                        // Document doesn't exist yet — create it (first-ever save)
+                        try {
+                            await this._createInventoryDoc(inventory);
+                            this._setSyncStatus('synced');
+                        } catch (ce) {
+                            console.error('Cloud save (create) error:', ce.message);
+                            this._setSyncStatus('error');
+                        }
+                    } else {
+                        console.error('Cloud save error:', e.message);
+                        this._setSyncStatus('error');
+                    }
                 }
             }, 800);
         },
 
+        async _createInventoryDoc(inventory) {
+            const items = [];
+            for (const item of inventory) {
+                const itemId = this.itemIdMap[item.name];
+                if (!itemId) continue;
+                const shg = (item.shg || '').trim();
+                items.push(`${itemId}|${item.quantity || 1}|${shg}`);
+            }
+            await databases.createDocument(DB_ID, COL_INVENTORY, this.user.$id, { 
+                user_id: this.user.$id,
+                items: items 
+            });
+        },
+
         async loadInventoryFromCloud() {
-            if (!this.supabase || !this.user || !this.profile) return null;
+            if (!databases || !this.user || !this.profile) return null;
             if (Object.keys(this.itemNameMap).length === 0) this.buildItemMaps();
 
             try {
-                const { data, error } = await this.supabase
-                    .from('user_inventory')
-                    .select('item_id, qty, shg')
-                    .eq('user_id', this.user.id);
-
-                if (error) throw error;
-                if (!data || data.length === 0) {
-                    this._cloudSnapshot = new Map();
-                    return [];
+                let doc;
+                try {
+                    doc = await databases.getDocument(DB_ID, COL_INVENTORY, this.user.$id);
+                } catch (e) {
+                    if (e.code === 404) {
+                        // New user — create their inventory doc
+                        await databases.createDocument(DB_ID, COL_INVENTORY, this.user.$id, { 
+                            user_id: this.user.$id, 
+                            items: [] 
+                        });
+                        return [];
+                    }
+                    throw e;
                 }
 
-                // Seed snapshot from loaded cloud data so saves can diff against it
-                this._cloudSnapshot = new Map(
-                    data.map(row => {
-                        const shg = (row.shg || '').trim();
-                        return [`${row.item_id}|${shg}`, { qty: row.qty }];
-                    })
-                );
+                const rawItems = doc.items || [];
+                if (rawItems.length === 0) return [];
 
-                return data
-                    .map(row => {
-                        const itemData = this.itemNameMap[row.item_id];
+                // Parse "itemId|qty|shg" strings and enrich from item data
+                return rawItems
+                    .map(str => {
+                        const [itemId, qtyStr, shg] = str.split('|');
+                        const itemData = this.itemNameMap[itemId];
                         if (!itemData) return null;
                         return {
                             name: itemData.name,
@@ -275,11 +303,12 @@
                             baseValue: itemData.value,
                             stability: itemData.stability,
                             stabilityType: window.FTFData?.parseStabilityType(itemData.stability) || null,
-                            shg: (row.shg && row.shg.trim()) ? row.shg.trim() : null,
-                            quantity: row.qty
+                            shg: (shg && shg.trim()) ? shg.trim() : null,
+                            quantity: Math.max(1, parseInt(qtyStr) || 1),
                         };
                     })
                     .filter(Boolean);
+
             } catch (e) {
                 console.error('Cloud load error:', e.message);
                 return null;
@@ -288,14 +317,35 @@
 
         // --- NOTE CLOUD SYNC ---
         async saveNoteToCloud(note) {
-            if (!this.supabase || !this.user || !this.profile) return;
+            if (!databases || !this.user || !this.profile) return;
             clearTimeout(noteSaveTimer);
             noteSaveTimer = setTimeout(async () => {
                 try {
-                    const { error } = await this.supabase
-                        .from('user_notes')
-                        .upsert({ user_id: this.user.id, note: note || '' });
-                    if (error) throw error;
+                    if (this._noteDocId) {
+                        // Update existing note
+                        await databases.updateDocument(DB_ID, COL_NOTES, this._noteDocId, {
+                            note: note || ''
+                        });
+                    } else {
+                        // Check if it exists but wasn't loaded yet
+                        const response = await databases.listDocuments(DB_ID, COL_NOTES, [
+                            Query.equal('user_id', this.user.$id),
+                            Query.limit(1)
+                        ]);
+                        if (response.documents.length > 0) {
+                            this._noteDocId = response.documents[0].$id;
+                            await databases.updateDocument(DB_ID, COL_NOTES, this._noteDocId, {
+                                note: note || ''
+                            });
+                        } else {
+                            // First time saving a note — create doc
+                            const doc = await databases.createDocument(DB_ID, COL_NOTES, this.user.$id, {
+                                user_id: this.user.$id,
+                                note: note || ''
+                            });
+                            this._noteDocId = doc.$id;
+                        }
+                    }
                 } catch (e) {
                     console.error('Note save error:', e.message);
                 }
@@ -303,22 +353,26 @@
         },
 
         async loadNoteFromCloud() {
-            if (!this.supabase || !this.user || !this.profile) return null;
+            if (!databases || !this.user || !this.profile) return null;
             try {
-                const { data, error } = await this.supabase
-                    .from('user_notes')
-                    .select('note')
-                    .eq('user_id', this.user.id)
-                    .maybeSingle();
-                if (error) throw error;
-                return data?.note ?? null;
+                // Query by user_id for migrated notes
+                const response = await databases.listDocuments(DB_ID, COL_NOTES, [
+                    Query.equal('user_id', this.user.$id),
+                    Query.limit(1)
+                ]);
+                if (response.documents.length > 0) {
+                    const doc = response.documents[0];
+                    this._noteDocId = doc.$id;
+                    return doc.note ?? null;
+                }
+                return null;
             } catch (e) {
                 console.error('Note load error:', e.message);
                 return null;
             }
         },
 
-        // --- MIGRATION ---
+        // --- LOCAL STORAGE MIGRATION ---
         async migrateLocalStorage() {
             try {
                 const saved = localStorage.getItem('ftf-inventory');
@@ -327,7 +381,7 @@
                 if (!Array.isArray(local) || local.length === 0) return false;
 
                 const cloud = await this.loadInventoryFromCloud();
-                if (cloud && cloud.length > 0) return false;
+                if (cloud && cloud.length > 0) return false; // Already has cloud data
 
                 return local;
             } catch (e) {
@@ -386,7 +440,6 @@
                 btn.classList.remove('logged-in');
                 btn.onclick = () => this.signInWithDiscord();
             }
-            // Remove loading state after content is set
             btn.classList.remove('auth-loading');
         },
 
