@@ -77,7 +77,7 @@
         {"id": "L074","name": "Santa Boot","value": 12.0,"rarity": "Legendary","demand": 1,"stability": "stable","rank": 75},
         {"id": "L111","name": "Antique Piano","value": 10.0,"rarity": "Legendary","demand": 1,"stability": "stable","rank": 76},
         {"id": "L186","name": "Honey Cheesecake","value": 10,"rarity": "Legendary","demand": 1.5,"stability": "fluctuating","rank": 77},
-        {"id": "L190","name": "Lily of The Valley","value": 10,"rarity": "Legendary","demand": 1.5,"stability": "stable","rank": 78},
+        {"id": "L190","name": "Lily of The Valley","value": 10,"rarity": "Legendary","demand": 1.5,"stability": "fluctuating","rank": 78},
         {"id": "L067","name": "Sweethearts Store","value": 10,"rarity": "Legendary","demand": 1.5,"stability": "stable","rank": 79},
         {"id": "L189","name": "Woodland Staff","value": 10,"rarity": "Legendary","demand": 1.5,"stability": "fluctuating","rank": 80},
         {"id": "L088","name": "1 Billion","value": 9,"rarity": "Legendary","demand": 1,"stability": "stable","rank": 81},
