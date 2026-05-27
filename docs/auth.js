@@ -5,10 +5,8 @@
     const DB_ID = 'ftf_db';
     const COL_PROFILES = 'profiles';
     const COL_INVENTORY = 'user_inventory';
-    const COL_NOTES = 'user_notes';
 
     let cloudSaveTimer = null;
-    let noteSaveTimer = null;
 
     // Appwrite SDK references (set after SDK loads)
     let client, account, databases, Query;
@@ -78,12 +76,16 @@
 
         async _handleSignIn() {
             await this.getProfile();
-            if (!this.profile) {
+            if (this.profileStatus === 'not_found') {
                 this.showUsernamePrompt();
-            } else {
+            } else if (this.profileStatus === 'exists') {
                 await this._syncDiscordUsername();
                 this._notifyReady();
                 if (typeof window._onAuthChange === 'function') window._onAuthChange(this.user);
+            } else {
+                // Network or preflight error: do not prompt for username since they likely have one
+                console.error('[FTFAuth] Failed to retrieve profile due to network/platform error.');
+                this._notifyReady();
             }
         },
 
@@ -111,7 +113,7 @@
             if (!account) return;
             // Provide the current URL as both success and failure redirects
             const origin = window.location.href.split('#')[0].split('?')[0];
-            
+
             try {
                 // Using createOAuth2Token instead of Session. 
                 // This forces Appwrite to return userId and secret in the URL, bypassing 3rd-party cookie blocks.
@@ -137,26 +139,24 @@
         // --- PROFILE ---
         async getProfile() {
             if (!databases || !this.user) return null;
+            this.profileStatus = 'loading';
             try {
-                // Query by user_id because migrated profiles have random Document IDs
-                const response = await databases.listDocuments(DB_ID, COL_PROFILES, [
-                    Query.equal('user_id', this.user.$id),
-                    Query.limit(1)
-                ]);
-
-                if (response.documents.length > 0) {
-                    const doc = response.documents[0];
-                    this._profileDocId = doc.$id; // Save real document ID for updates
-                    this.profile = {
-                        username: doc.username,
-                        discord_username: doc.discord_username,
-                        created_at: doc.$createdAt,
-                    };
-                } else {
-                    this.profile = null;
-                }
+                const doc = await databases.getDocument(DB_ID, COL_PROFILES, this.user.$id);
+                this._profileDocId = doc.$id;
+                this.profile = {
+                    username: doc.username,
+                    discord_username: doc.discord_username,
+                    created_at: doc.$createdAt,
+                };
+                this.profileStatus = 'exists';
             } catch (e) {
                 this.profile = null;
+                if (e.code === 404) {
+                    this.profileStatus = 'not_found';
+                } else {
+                    console.warn('[FTFAuth] getProfile error:', e.message);
+                    this.profileStatus = 'error';
+                }
             }
             this.updateAuthUI();
             return this.profile;
@@ -170,10 +170,10 @@
                     DB_ID,
                     COL_PROFILES,
                     this.user.$id,  // Use uid as document ID — enforces one-per-user
-                    { 
-                        user_id: this.user.$id, 
-                        username: username, 
-                        discord_username: discordName 
+                    {
+                        user_id: this.user.$id,
+                        username: username,
+                        discord_username: discordName
                     }
                 );
                 this.profile = {
@@ -261,9 +261,9 @@
                 const shg = (item.shg || '').trim();
                 items.push(`${itemId}|${item.quantity || 1}|${shg}`);
             }
-            await databases.createDocument(DB_ID, COL_INVENTORY, this.user.$id, { 
+            await databases.createDocument(DB_ID, COL_INVENTORY, this.user.$id, {
                 user_id: this.user.$id,
-                items: items 
+                items: items
             });
         },
 
@@ -278,9 +278,9 @@
                 } catch (e) {
                     if (e.code === 404) {
                         // New user — create their inventory doc
-                        await databases.createDocument(DB_ID, COL_INVENTORY, this.user.$id, { 
-                            user_id: this.user.$id, 
-                            items: [] 
+                        await databases.createDocument(DB_ID, COL_INVENTORY, this.user.$id, {
+                            user_id: this.user.$id,
+                            items: []
                         });
                         return [];
                     }
@@ -315,62 +315,7 @@
             }
         },
 
-        // --- NOTE CLOUD SYNC ---
-        async saveNoteToCloud(note) {
-            if (!databases || !this.user || !this.profile) return;
-            clearTimeout(noteSaveTimer);
-            noteSaveTimer = setTimeout(async () => {
-                try {
-                    if (this._noteDocId) {
-                        // Update existing note
-                        await databases.updateDocument(DB_ID, COL_NOTES, this._noteDocId, {
-                            note: note || ''
-                        });
-                    } else {
-                        // Check if it exists but wasn't loaded yet
-                        const response = await databases.listDocuments(DB_ID, COL_NOTES, [
-                            Query.equal('user_id', this.user.$id),
-                            Query.limit(1)
-                        ]);
-                        if (response.documents.length > 0) {
-                            this._noteDocId = response.documents[0].$id;
-                            await databases.updateDocument(DB_ID, COL_NOTES, this._noteDocId, {
-                                note: note || ''
-                            });
-                        } else {
-                            // First time saving a note — create doc
-                            const doc = await databases.createDocument(DB_ID, COL_NOTES, this.user.$id, {
-                                user_id: this.user.$id,
-                                note: note || ''
-                            });
-                            this._noteDocId = doc.$id;
-                        }
-                    }
-                } catch (e) {
-                    console.error('Note save error:', e.message);
-                }
-            }, 800);
-        },
 
-        async loadNoteFromCloud() {
-            if (!databases || !this.user || !this.profile) return null;
-            try {
-                // Query by user_id for migrated notes
-                const response = await databases.listDocuments(DB_ID, COL_NOTES, [
-                    Query.equal('user_id', this.user.$id),
-                    Query.limit(1)
-                ]);
-                if (response.documents.length > 0) {
-                    const doc = response.documents[0];
-                    this._noteDocId = doc.$id;
-                    return doc.note ?? null;
-                }
-                return null;
-            } catch (e) {
-                console.error('Note load error:', e.message);
-                return null;
-            }
-        },
 
         // --- LOCAL STORAGE MIGRATION ---
         async migrateLocalStorage() {
@@ -541,8 +486,7 @@
                 if (Object.keys(this.itemIdMap).length === 0) this.buildItemMaps();
                 await this.saveInventoryToCloud(localData);
 
-                const savedNote = localStorage.getItem('ftf-inv-note');
-                if (savedNote) await this.saveNoteToCloud(savedNote);
+
 
                 overlay.remove();
                 if (typeof window._onAuthChange === 'function') window._onAuthChange(this.user);

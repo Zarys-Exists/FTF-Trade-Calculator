@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const IMG_BASE = 'items/';
     const ITEM_PAGE_SIZE = 40;
-    const NOTE_MAX = 120;
 
     // --- STATE ---
     let allItems = [];
@@ -11,7 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentSort = 'default';
     let currentSHG = null;          // 'h', 'g', or null
     let invSearchQuery = '';
-    let searchDebounceTimer = null;
+    let searchDebounceTimer = null;    // modal search
+    let invSearchDebounceTimer = null; // inventory search
+    let sortDescending = false;
     let filteredItemCache = [];
     let renderedItemCount = 0;
     let isLoadingMore = false;
@@ -21,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const RARITY_ORDER = { Legendary: 0, Epic: 1, Rare: 2, Common: 3 };
     const SORT_LABELS = { 'default': 'Value', 'rarity': 'Rarity', 'name': 'Name', 'added order': 'Added Order' };
 
-    // Stability colours — exactly matching CSS variables / guide
+    // Stability colours — used exclusively by the screenshot Canvas rendering engine
+    // (Live cards use CSS variables via data-stability attributes)
     const STABILITY_COLORS = {
         'rising': '#34d399',
         'improving': '#46d27a',
@@ -45,8 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const statTotalQty = document.getElementById('stat-total-qty');
     const invSearchEl = document.getElementById('inv-search');
     const invSearchClear = document.getElementById('inv-search-clear');
-    const invNoteEl = document.getElementById('inv-note');
-    const invNoteCount = document.getElementById('inv-note-count');
     const confirmOverlay = document.getElementById('confirm-dialog');
 
     // Sort dropdown elements
@@ -155,33 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     }
 
-    function saveNote() {
-        try { if (invNoteEl) localStorage.setItem('ftf-inv-note', invNoteEl.value); }
-        catch (e) { console.error('Failed to save note:', e); }
-        if (window.FTFAuth?.user && window.FTFAuth?.profile && invNoteEl) {
-            window.FTFAuth.saveNoteToCloud(invNoteEl.value);
-        }
-    }
-    function loadNote() {
-        try {
-            const saved = localStorage.getItem('ftf-inv-note');
-            if (saved && invNoteEl) {
-                invNoteEl.value = saved;
-                invNoteEl.dispatchEvent(new Event('input'));
-            }
-        } catch (e) { console.error('Failed to load note:', e); }
-    }
-    async function loadNoteFromCloud() {
-        if (!window.FTFAuth?.user || !window.FTFAuth?.profile) return;
-        try {
-            const note = await window.FTFAuth.loadNoteFromCloud();
-            if (note !== null && invNoteEl) {
-                invNoteEl.value = note;
-                invNoteEl.dispatchEvent(new Event('input'));
-                localStorage.setItem('ftf-inv-note', note);
-            }
-        } catch (e) { console.error('Cloud note load failed:', e); }
-    }
+
 
     function saveSortOptions() {
         try {
@@ -208,18 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) { console.error('Failed to load sort options:', e); }
     }
-    function sanitizeLive(raw) {
-        return raw
-            .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')      // control chars
-            .replace(/[\u200B-\u200D\u2028\u2029\uFEFF]/g, '')  // zero-width / line seps
-            .slice(0, NOTE_MAX);
-    }
-    function sanitizeNote(raw) {
-        return sanitizeLive(raw).trim();
-    }
+
 
     // --- SORT ---
-    let sortDescending = false;
     function getSortedInventory() {
         const arr = [...inventory];
         switch (currentSort) {
@@ -372,7 +337,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const idx = inventory.findIndex(i => i.name === item.name && (i.shg || null) === targetSHG);
             if (idx !== -1) inventory.splice(idx, 1);
             saveInventory();
-            renderInventory();
+
+            // Surgical DOM removal — no full re-render needed
+            if (currentSort === 'rarity') {
+                const gridInner = card.closest('.inventory-grid-inner');
+                card.remove();
+                if (gridInner) {
+                    if (gridInner.children.length === 0) {
+                        gridInner.closest('.inv-rarity-group')?.remove();
+                    } else {
+                        // Update the group header count
+                        const header = gridInner.closest('.inv-rarity-group')?.querySelector('.inv-rarity-header');
+                        if (header) {
+                            const count = gridInner.children.length;
+                            header.textContent = `${item.rarity} — ${count} item${count !== 1 ? 's' : ''}`;
+                        }
+                    }
+                }
+            } else {
+                card.remove();
+            }
+
+            if (inventory.length === 0) {
+                emptyState.style.display = 'flex';
+                emptyState.querySelector('p').textContent = 'Your inventory is empty';
+                emptyState.querySelector('span').textContent = 'Click "+  Add Items" to start tracking your collection';
+            }
+            updateStats();
         };
 
         const input = card.querySelector('.qty-input');
@@ -437,8 +428,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const toAdd = Math.min(pairs, room);
 
                 setItem.quantity += toAdd;
-                hItem.quantity -= pairs;
-                gItem.quantity -= pairs;
+                hItem.quantity -= toAdd;
+                gItem.quantity -= toAdd;
             }
         });
 
@@ -675,7 +666,6 @@ document.addEventListener('DOMContentLoaded', () => {
         CELL_GAP: 9,
         CELL_H: 148,
         HEADER_H: 68,
-        NOTE_H: 36,
         FOOTER_H: 40,
         V_PAD: 14,
         RARITY_COLORS: {
@@ -699,10 +689,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('screenshot-btn');
         btn.disabled = true;
         btn.textContent = 'Preparing…';
-
-        // Read + sanitise note safely
-        const rawNote = invNoteEl ? invNoteEl.value : '';
-        const note = sanitizeNote(rawNote);
 
         const CW = cellW();
         const sorted = getSortedInventory();
@@ -735,8 +721,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let pi = 0; pi < pages.length; pi++) {
             const pageItems = pages[pi];
             const rows = Math.ceil(pageItems.length / SS.COLS);
-            const noteOffset = note ? SS.NOTE_H : 0;
-            const canvasH = SS.HEADER_H + noteOffset + SS.V_PAD
+            const canvasH = SS.HEADER_H + SS.V_PAD
                 + rows * SS.CELL_H + (rows - 1) * SS.CELL_GAP
                 + SS.V_PAD + SS.FOOTER_H;
 
@@ -755,7 +740,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Subtle dot texture
             ctx.fillStyle = 'rgba(255,255,255,0.016)';
             for (let gx = SS.H_PAD; gx < SS.CANVAS_W - SS.H_PAD; gx += 20) {
-                for (let gy = SS.HEADER_H + noteOffset; gy < canvasH - SS.FOOTER_H; gy += 20) {
+                for (let gy = SS.HEADER_H; gy < canvasH - SS.FOOTER_H; gy += 20) {
                     ctx.fillRect(gx, gy, 1, 1);
                 }
             }
@@ -792,25 +777,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.fillText(`Page ${pi + 1} of ${pages.length}`, SS.CANVAS_W - SS.H_PAD, SS.HEADER_H / 2 + 10);
             }
 
-            // ── Note band ────────────────────────────────────────────────
-            if (note) {
-                const ny = SS.HEADER_H;
-                ctx.fillStyle = 'rgba(124,58,237,0.11)';
-                ctx.fillRect(0, ny, SS.CANVAS_W, SS.NOTE_H);
-                ctx.fillStyle = 'rgba(124,58,237,0.7)';
-                ctx.fillRect(0, ny, 3, SS.NOTE_H);
-                ctx.fillStyle = 'rgba(124,58,237,0.2)';
-                ctx.fillRect(0, ny + SS.NOTE_H - 1, SS.CANVAS_W, 1);
-                ctx.font = '13px Arial, sans-serif';
-                ctx.fillStyle = '#9d7fd4'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-                ctx.fillText('✎', SS.H_PAD, ny + SS.NOTE_H / 2);
-                ctx.font = 'italic 13px Arial, sans-serif';
-                ctx.fillStyle = '#e2d4ff';
-                ctx.fillText(note, SS.H_PAD + 22, ny + SS.NOTE_H / 2);
-            }
-
             // ── Item cells ───────────────────────────────────────────────
-            const itemsTop = SS.HEADER_H + noteOffset + SS.V_PAD;
+            const itemsTop = SS.HEADER_H + SS.V_PAD;
             pageItems.forEach((item, idx) => {
                 const col = idx % SS.COLS;
                 const row = Math.floor(idx / SS.COLS);
@@ -839,15 +807,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? `ftf-inventory-${pi + 1}-of-${pages.length}.png`
                     : 'ftf-inventory.png';
                 link.href = canvas.toDataURL('image/png');
-                document.body.appendChild(link);
+                
+                // Trigger download directly without injecting/deleting from DOM instantly,
+                // which causes browser engines to cancel early requests and only save the last page.
                 link.click();
-                document.body.removeChild(link);
             } catch (err) {
                 console.error('Canvas export failed:', err);
                 showAlert({ title: 'Screenshot failed', message: 'Images may be blocked by cross-origin policy. Try refreshing and retrying.' });
                 break;
             }
-            if (pi < pages.length - 1) await new Promise(r => setTimeout(r, 500));
+            // Fast delay to prevent browser spam-filters from blocking consecutive downloads
+            if (pi < pages.length - 1) await new Promise(r => setTimeout(r, 600));
         }
 
         btn.disabled = false;
@@ -985,8 +955,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- VALUE SYNC ---
     function syncInventoryValues() {
         let hasUpdates = false;
+        // Use pre-built maps for O(1) lookups instead of O(n) allItems.find()
+        const idMap = window.FTFData?._itemIdMap;
+        const nameMap = window.FTFData?._itemNameMap;
+
         inventory.forEach(invItem => {
-            const itemData = allItems.find(item => item.name === invItem.name);
+            const id = idMap?.[invItem.name];
+            const itemData = id ? nameMap?.[id] : allItems.find(i => i.name === invItem.name);
             if (itemData) {
                 const oldValue = invItem.value || invItem.baseValue;
                 const newValue = itemData.value;
@@ -1010,6 +985,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- INIT ---
+    let lastLoadedUserId = null;
+
     async function init() {
         if (!window.FTFData) {
             console.error('Essential data utility (utils.js) failed to load.');
@@ -1020,17 +997,43 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Run basic layout initialization (leave inventory blank while loading)
         loadSortOptions();
-        loadInventory();
-        loadNote();
         initSidebarToggle();
-        renderInventory();
+
+        // Kick off catalog loading and session verification concurrently
+        const dataPromise = window.FTFData.init();
+        const authPromise = new Promise(resolve => {
+            if (window.FTFAuth) {
+                window.FTFAuth.onReady(() => resolve());
+            } else {
+                resolve();
+            }
+        });
 
         try {
-            await window.FTFData.init();
+            await Promise.all([dataPromise, authPromise]);
             allItems = window.FTFData.allItems;
             window.FTFData.buildItemMaps();
             if (window.FTFAuth) window.FTFAuth.buildItemMaps();
+
+            // Run initial data loading
+            if (window.FTFAuth?.user && window.FTFAuth?.profile) {
+                const currentUserId = window.FTFAuth.user.$id;
+                if (currentUserId !== lastLoadedUserId) {
+                    lastLoadedUserId = currentUserId;
+                    const loaded = await loadInventoryFromCloud();
+                    if (!loaded) {
+                        // Network/SDK error: fall back to local storage so user still sees their cached data
+                        loadInventory();
+                    }
+                }
+            } else {
+                // Not authenticated/logged out: load local storage data
+                loadInventory();
+            }
+
+            // Exactly ONE sync and render at the very end of the load sequence
             syncInventoryValues();
             renderInventory();
         } catch (e) {
@@ -1039,10 +1042,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 title: 'Database Sync Error',
                 message: 'We could not sync the latest item values. Your local inventory is still visible but values may be outdated.'
             });
+            // Safe fallback on initialization failure
+            loadInventory();
+            syncInventoryValues();
+            renderInventory();
+        } finally {
+            // Remove the loading spinner container
+            const loader = document.getElementById('inventory-loader');
+            if (loader) {
+                loader.classList.remove('is-visible');
+            }
         }
 
-        // Auth state callback — reload inventory from cloud on sign-in/out
+        // Auth state callback — reload inventory from cloud on sign-in/out (transitions post-load)
         window._onAuthChange = async (user) => {
+            const currentUserId = user?.$id || null;
+            if (currentUserId === lastLoadedUserId) return;
+            lastLoadedUserId = currentUserId;
+
             if (user && window.FTFAuth?.profile) {
                 if (window.FTFData?.allItems?.length) {
                     window.FTFData.buildItemMaps();
@@ -1051,34 +1068,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const loaded = await loadInventoryFromCloud();
                 if (loaded) {
                     syncInventoryValues();
+                    renderInventory();
                 }
-                await loadNoteFromCloud();
-                renderInventory();
-            } else {
+            } else if (!user) {
                 // Signed out — reload from localStorage
                 loadInventory();
-                loadNote();
                 renderInventory();
             }
         };
-
-        // If already signed in (page reload with existing session), load cloud data
-        if (window.FTFAuth) {
-            window.FTFAuth.onReady(async () => {
-                if (window.FTFAuth.user && window.FTFAuth.profile) {
-                    if (window.FTFData?.allItems?.length) {
-                        window.FTFData.buildItemMaps();
-                        window.FTFAuth.buildItemMaps();
-                    }
-                    const loaded = await loadInventoryFromCloud();
-                    if (loaded) {
-                        syncInventoryValues();
-                    }
-                    await loadNoteFromCloud();
-                    renderInventory();
-                }
-            });
-        }
     }
 
     // --- EVENT LISTENERS ---
@@ -1134,8 +1131,8 @@ document.addEventListener('DOMContentLoaded', () => {
     invSearchEl?.addEventListener('input', () => {
         invSearchQuery = invSearchEl.value.trim();
         if (invSearchClear) invSearchClear.style.display = invSearchQuery ? 'block' : 'none';
-        clearTimeout(searchDebounceTimer);
-        searchDebounceTimer = setTimeout(() => {
+        clearTimeout(invSearchDebounceTimer);
+        invSearchDebounceTimer = setTimeout(() => {
             renderInventory();
         }, 400);
     });
@@ -1146,23 +1143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderInventory();
     });
 
-    // Note: live strip (no trim) so spaces are preserved while typing
-    invNoteEl?.addEventListener('input', () => {
-        const clean = sanitizeLive(invNoteEl.value);
-        // Only overwrite if something was actually stripped — preserves cursor position otherwise
-        if (invNoteEl.value !== clean) {
-            const sel = invNoteEl.selectionStart;
-            invNoteEl.value = clean;
-            invNoteEl.setSelectionRange(sel, sel);
-        }
-        const len = clean.length;
-        if (invNoteCount) {
-            invNoteCount.textContent = `${len} / ${NOTE_MAX}`;
-            invNoteCount.classList.toggle('near-limit', len >= 100 && len < NOTE_MAX);
-            invNoteCount.classList.toggle('at-limit', len >= NOTE_MAX);
-        }
-        saveNote();
-    });
+
 
     if (closeModalBtn) closeModalBtn.onclick = tryDismissModal;
     if (modal) modal.onclick = (e) => { if (e.target === modal) tryDismissModal(); };

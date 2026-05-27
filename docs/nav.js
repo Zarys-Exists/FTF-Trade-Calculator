@@ -1,6 +1,7 @@
 (function () {
-    const isGuide = location.pathname.includes('guide.html');
-    const isInventory = location.pathname.includes('inventory.html');
+    const path = location.pathname.toLowerCase();
+    const isGuide = path.includes('/guide') || path.endsWith('guide.html');
+    const isInventory = path.includes('/inventory') || path.endsWith('inventory.html');
 
     // ---- Inject site header (Landmark: <header>) ----
     const header = document.createElement('header');
@@ -42,8 +43,6 @@
     nav.className = 'nav-drawer';
     nav.id = 'nav-drawer';
     nav.setAttribute('aria-hidden', 'true');
-    nav.style.visibility = 'hidden';
-    nav.style.pointerEvents = 'none';
 
     nav.innerHTML = `
         <div class="nav-drawer-header">Menu</div>
@@ -64,8 +63,6 @@
         hamburgerBtn.setAttribute('aria-expanded', 'true');
         navDrawer.classList.add('is-open');
         navDrawer.setAttribute('aria-hidden', 'false');
-        navDrawer.style.visibility = 'visible';
-        navDrawer.style.pointerEvents = 'auto';
         navOverlay.classList.add('is-visible');
         document.body.classList.add('drawer-open');
     }
@@ -75,8 +72,6 @@
         hamburgerBtn.setAttribute('aria-expanded', 'false');
         navDrawer.classList.remove('is-open');
         navDrawer.setAttribute('aria-hidden', 'true');
-        navDrawer.style.visibility = 'hidden';
-        navDrawer.style.pointerEvents = 'none';
         navOverlay.classList.remove('is-visible');
         document.body.classList.remove('drawer-open');
     }
@@ -87,6 +82,20 @@
     navOverlay.addEventListener('click', closeDrawer);
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeDrawer();
+    });
+
+    // Intercept nav link clicks to slide drawer closed before redirecting
+    navDrawer.querySelectorAll('.nav-drawer-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (href && !href.startsWith('#') && navDrawer.classList.contains('is-open')) {
+                e.preventDefault();
+                closeDrawer();
+                setTimeout(() => {
+                    window.location.href = href;
+                }, 320);
+            }
+        });
     });
 
     // Theme logic stays same

@@ -265,59 +265,7 @@
     transform: scale(0.96);
 }
 
-/* ========== SCREENSHOT NOTE ========== */
-.inv-note-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    background: var(--bg-light);
-    border: 1px solid var(--border-color);
-    border-left: 3px solid var(--color-primary);
-    border-radius: 0.5rem;
-    padding: 0.55rem 0.85rem;
-}
 
-.inv-note-icon {
-    color: var(--color-text-secondary);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    opacity: 0.7;
-}
-
-.inv-note-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: var(--color-text);
-    font-size: 0.88rem;
-    font-family: inherit;
-    outline: none;
-    min-width: 0;
-}
-
-.inv-note-input::placeholder {
-    color: var(--color-text-secondary);
-    opacity: 0.6;
-}
-
-.inv-note-count {
-    font-size: 0.72rem;
-    color: var(--color-text-secondary);
-    flex-shrink: 0;
-    opacity: 0.7;
-    font-variant-numeric: tabular-nums;
-}
-
-.inv-note-count.near-limit {
-    color: #fb923c;
-    opacity: 1;
-}
-
-.inv-note-count.at-limit {
-    color: #ef4444;
-    opacity: 1;
-}
 
 /* ========== INVENTORY SEARCH ========== */
 .inv-search-wrap {
@@ -385,6 +333,7 @@
 
 /* ========== INVENTORY MAIN GRID AREA ========== */
 .inventory-main {
+    position: relative;
     flex: 1 1 0;
     min-width: 0;
     display: flex;
@@ -1154,4 +1103,41 @@ html.dark-theme .comp-common {
         font-size: 0.85rem;
         padding: 0.45rem 1rem;
     }
+}
+
+/* ========== INITIAL LOADING SPINNER ========== */
+.inventory-loader-container {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    min-height: 22rem;
+    width: 100%;
+}
+
+.inventory-loader-container.is-visible {
+    display: flex;
+}
+
+.spinner {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 3.5px solid rgba(0, 0, 0, 0.1);
+    border-top: 3.5px solid var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.dark-theme .spinner {
+    border-color: rgba(255, 255, 255, 0.1);
+    border-top-color: var(--color-primary);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ========== SIBLING HIDING WHILE LOADING ========== */
+.inventory-loader-container.is-visible ~ .inventory-layout {
+    display: none !important;
 }
