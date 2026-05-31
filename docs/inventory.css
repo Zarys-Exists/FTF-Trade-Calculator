@@ -545,7 +545,7 @@
 
 .inv-card-name {
     font-size: 0.67rem;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--color-text);
     text-align: center;
     white-space: nowrap;

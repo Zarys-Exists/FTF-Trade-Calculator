@@ -39,7 +39,7 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="inventory.css">
     <link rel="icon" type="image/x-icon" href="favicon/favicon.ico">
@@ -233,7 +233,23 @@
                     </div>
                 </div>
                 <div class="item-display-area">
-                    <input type="text" id="item-search" placeholder="Search for items...">
+                    <div class="modal-search-sort-wrapper">
+                        <input type="text" id="item-search" placeholder="Search for items...">
+                        <div class="modal-sort-controls">
+                            <button id="modal-sort-dropdown" class="modal-sort-trigger" aria-label="Sort items">
+                                <span id="modal-sort-label">Rarity</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div id="modal-sort-menu" class="modal-sort-menu">
+                                <button class="modal-sort-option active" data-sort-value="rarity" data-sort-label="Rarity">Rarity</button>
+                                <button class="modal-sort-option" data-sort-value="value" data-sort-label="Value">Value</button>
+                                <button class="modal-sort-option" data-sort-value="alphabetic" data-sort-label="Name">Name</button>
+                            </div>
+                            <button id="modal-sort-reverse" class="modal-sort-reverse" title="Reverse sort order" aria-label="Reverse sort order">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v8M3 5l3-3 3 3" /></svg>
+                            </button>
+                        </div>
+                    </div>
                     <div id="item-list" class="item-list"></div>
                 </div>
             </div>

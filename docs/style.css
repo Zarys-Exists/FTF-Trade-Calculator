@@ -36,6 +36,7 @@ button, input[type="button"], input[type="submit"], a {
     --knob-shadow: rgba(106, 30, 224, 0.25);
     
     --modal-overlay: rgba(0, 0, 0, 0.7);
+    --search-focus-border: #a855f7;
 
     --header-height: 3.5rem;
     
@@ -81,6 +82,7 @@ html.dark-theme {
     --knob-shadow: rgba(42, 42, 42, 0.25);
     
     --modal-overlay: rgba(0, 0, 0, 0.85);
+    --search-focus-border: #cccccc;
     
     --scrollbar-bg: #0b0b0b;
     --scrollbar-thumb: var(--color-primary);
@@ -96,7 +98,8 @@ html {
   
 body {
     background: transparent;
-    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: 'Rubik', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-weight: 400;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -520,7 +523,6 @@ body.drawer-open {
     padding: 0.25rem;
     position: relative;
     overflow: hidden;
-    aspect-ratio: 1 / 1;
 }
 
 .item-slot[data-shg="h"]::before,
@@ -670,7 +672,7 @@ body.drawer-open {
 .total-value {
     color: var(--color-text);
     font-size: 1.4rem;
-    font-weight: 700;
+    font-weight: 500;
     position: absolute;
     top: -4.5rem;
     min-width: 12.5rem;
@@ -804,7 +806,7 @@ body.drawer-open {
 
 #wfl-result {
     font-size: 2.2rem;
-    font-weight: 700;
+    font-weight: 500;
     padding: 0.5rem 0.25rem;
     border-radius: 0.5rem;
     transition: all 0.3s ease;
@@ -980,7 +982,7 @@ body.drawer-open {
     width: 100%;
     padding: 0.75rem;
     border-radius: 0.5rem;
-    border: 2px solid var(--border-color);
+    border: 1px solid var(--border-color);
     background-color: var(--bg-lighter);
     color: var(--color-text);
     font-size: 1rem;
@@ -989,8 +991,173 @@ body.drawer-open {
 
 #item-search:focus-visible {
     outline: none;
+    border-color: var(--search-focus-border);
+    box-shadow: none;
+}
+
+/* Modal Search & Sort Wrapper */
+.modal-search-sort-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    align-items: flex-start;
+}
+
+#item-search {
+    flex: 1 1 0;
+    width: auto;
+    height: 2.25rem;
+    padding: 0 0.9rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-lighter);
+    color: var(--color-text);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.modal-sort-controls {
+    display: flex;
+    gap: 0;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+    min-width: 0;
+    flex-shrink: 0;
+}
+
+.modal-sort-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+    height: 2.25rem;
+    padding: 0 0.65rem;
+    border-radius: 0.5rem 0 0 0.5rem;
+    border: 1px solid var(--border-color);
+    border-right: none;
+    background: var(--bg-lighter);
+    color: var(--color-text);
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease;
+    position: relative;
+    font-family: inherit;
+    font-weight: 500;
+    width: auto;
+    min-width: 6rem;
+    box-sizing: border-box;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.modal-sort-trigger:hover {
+    background: var(--bg-hover);
+}
+
+.modal-sort-trigger:focus-visible {
+    outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px var(--focus-shadow);
+}
+
+.modal-sort-trigger svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.modal-sort-trigger.open svg {
+    transform: rotate(180deg);
+}
+
+
+
+.modal-sort-menu {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    left: 0;
+    min-width: 100%;
+    background: var(--bg-container);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    display: none;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.25rem;
+    z-index: 200;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.modal-sort-trigger.open ~ .modal-sort-menu {
+    display: flex;
+}
+
+.modal-sort-option {
+    padding: 0.55rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: var(--color-text);
+    text-align: left;
+    cursor: pointer;
+    border-radius: 0.35rem;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: background-color 0.15s ease;
+}
+
+.modal-sort-option:hover {
+    background-color: var(--bg-light);
+}
+
+.modal-sort-option.active {
+    background-color: var(--bg-light);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.modal-sort-reverse {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.25rem;
+    width: 2rem;
+    padding: 0;
+    border-radius: 0 0.5rem 0.5rem 0;
+    border: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+    background: var(--bg-lighter);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    font-family: inherit;
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+
+.modal-sort-reverse:hover {
+    background: var(--bg-hover);
+}
+
+.modal-sort-reverse svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    transform: rotate(180deg);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-sort-reverse.reversed svg {
+    transform: rotate(0deg);
+}
+
+.modal-sort-reverse:focus-visible {
+    outline: none;
+    border-color: var(--search-focus-border);
 }
 
 .item-list {
@@ -1034,8 +1201,9 @@ body.drawer-open {
 }
 
 .modal-item-img {
-    width: 70%;
-    height: 70%;
+    width: 100%;
+    flex: 1 1 0;
+    min-height: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1047,10 +1215,30 @@ body.drawer-open {
     object-fit: contain;
 }
 
+.modal-item-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 0.15rem;
+    flex-shrink: 0;
+}
+
 .modal-item-name {
     font-size: 0.8rem;
-    word-break: break-word;
     line-height: 1.2;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.modal-item-value {
+    font-size: 0.65rem;
+    color: #ebd4ff;
+    font-weight: 500;
+    line-height: 1.1;
+    white-space: nowrap;
 }
 
 /* Guide Page Styling */
@@ -1153,6 +1341,7 @@ html.dark-theme .trade-info .label { color: #a0a0a0; }
 html.dark-theme .trade-info a:hover { color: #b3b3b3; }
 html.dark-theme .guide-closing { color: #aaaaaa; background: rgba(255, 255, 255, 0.05); }
 html.dark-theme .guide-section { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+html.dark-theme .modal-item-value { color: var(--color-text-secondary); }
 
 /* ========== RESPONSIVE SCALING ========== */
 @media screen and (max-width: 68rem) {
@@ -1249,6 +1438,7 @@ html.dark-theme .guide-section { border-bottom: 1px solid rgba(255, 255, 255, 0.
 @media screen and (min-width: 26.1rem) and (max-width: 47rem) {
     .trade-page-container { padding-bottom: 3.75rem; }
     .info-lines { bottom: 0.65rem; left: 0.65rem; font-size: 0.6rem; gap: 0.2rem; }
+    .item-list { grid-template-columns: repeat(4, 1fr); gap: 0.15rem 0.2rem; }
 }
 
 @media screen and (max-width: 26rem) {
@@ -1286,7 +1476,7 @@ html.dark-theme .guide-section { border-bottom: 1px solid rgba(255, 255, 255, 0.
     .modal-content { width: 98vw; height: 90vh; padding: 0.5rem; }
     .rarity-filter-btn { padding: 0.45rem; font-size: 0.8rem; }
     .shg-btn { min-width: 2.5rem; font-size: 0.8rem; padding: 0.45rem; }
-    .item-list { grid-template-columns: repeat(3, 1fr); gap: 0.1rem 0.15rem; }
+    .item-list { grid-template-columns: repeat(4, 1fr); gap: 0.1rem 0.15rem; }
     .modal-item { padding: 0.3rem; gap: 0.3rem; }
     .modal-item-name { font-size: 0.6rem; }
     #item-search { font-size: 0.75rem; padding: 0.4rem; }
@@ -1318,7 +1508,7 @@ html.dark-theme .guide-section { border-bottom: 1px solid rgba(255, 255, 255, 0.
     .item-slot[data-shg="h"]::before, .item-slot[data-shg="g"]::before { width: 20px; height: 20px; font-size: 14px; top: 1px; right: 1px; }
     .item-slot-name { font-size: 0.7rem; }
 
-    .total-value { font-size: 1.5rem; top: -3.7rem; font-weight: 600; }
+    .total-value { font-size: 1.5rem; top: -3.7rem; font-weight: 500; }
     .wfl-container { flex: 0 0 clamp(8rem, 18vw, 16rem); width: clamp(8rem, 18vw, 16rem); gap: 0.8rem; padding: 0; }
     #wfl-result { font-size: 2rem; padding: 0.4rem 0.3rem; }
     #reset-trade-btn { padding: 0.4rem 0.8rem; font-size: 1rem; min-width: auto; }

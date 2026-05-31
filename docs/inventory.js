@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let renderedItemCount = 0;
     let isLoadingMore = false;
     let itemListObserver = null;
+    let modalSortController = null;
+    let _rawSavedInventory = null; // compact format before hydration
 
 
     const RARITY_ORDER = { Legendary: 0, Epic: 1, Rare: 2, Common: 3 };
@@ -54,6 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortTrigger = document.getElementById('inv-sort-trigger');
     const sortLabel = document.getElementById('inv-sort-label');
     const sortMenu = document.getElementById('inv-sort-menu');
+
+    // Modal sort controls
+    const modalSortDropdown = document.getElementById('modal-sort-dropdown');
+    const modalSortLabel = document.getElementById('modal-sort-label');
+    const modalSortMenu = document.getElementById('modal-sort-menu');
+    const modalSortReversBtn = document.getElementById('modal-sort-reverse');
 
     // Sidebar toggle elements
     const inventorySidebar = document.getElementById('inventory-sidebar');
@@ -130,7 +138,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- PERSISTENCE ---
     function saveInventory() {
-        try { localStorage.setItem('ftf-inventory', JSON.stringify(inventory)); }
+        try {
+            const compact = inventory.map(item => ({
+                id: item.id,
+                qty: item.quantity,
+                shg: item.shg || null,
+            }));
+            localStorage.setItem('ftf-inventory', JSON.stringify(compact));
+        }
         catch (e) { console.error('Failed to save inventory:', e); }
         if (window.FTFAuth?.user && window.FTFAuth?.profile) {
             window.FTFAuth.saveInventoryToCloud(inventory);
@@ -139,22 +154,64 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadInventory() {
         try {
             const saved = localStorage.getItem('ftf-inventory');
-            if (saved) inventory = JSON.parse(saved);
-        } catch (e) { inventory = []; }
+            if (saved) _rawSavedInventory = JSON.parse(saved);
+            else _rawSavedInventory = [];
+        } catch (e) { _rawSavedInventory = []; }
     }
+    function hydrateInventoryFromRaw() {
+        if (!_rawSavedInventory) return;
+        // Use pre-built O(1) maps instead of O(n) allItems.find()
+        const nameMap = window.FTFData?._itemNameMap || {};
+        const idMap   = window.FTFData?._itemIdMap   || {};
+        inventory = _rawSavedInventory.map(entry => {
+            // New compact format: { id, qty, shg }
+            if (entry.id) {
+                const item = nameMap[entry.id];
+                if (!item) return null;
+                return {
+                    ...item,
+                    baseValue: item.value,
+                    quantity: Math.max(1, entry.qty ?? 1),
+                    shg: entry.shg || null,
+                    stabilityType: window.FTFData.parseStabilityType(item.stability),
+                };
+            }
+            // Old full-object format (backward compat): look up by name → id → item
+            if (entry.name) {
+                const itemId = idMap[entry.name];
+                const item = itemId ? nameMap[itemId] : null;
+                if (!item) return null;
+                return {
+                    ...item,
+                    baseValue: item.value,
+                    quantity: Math.max(1, entry.quantity ?? entry.qty ?? 1),
+                    shg: entry.shg || null,
+                    stabilityType: window.FTFData.parseStabilityType(item.stability),
+                };
+            }
+            return null;
+        }).filter(Boolean);
+        _rawSavedInventory = null;
+    }
+
     async function loadInventoryFromCloud() {
         if (!window.FTFAuth?.user || !window.FTFAuth?.profile) return false;
         try {
             const cloud = await window.FTFAuth.loadInventoryFromCloud();
             if (cloud && cloud.length > 0) {
+                // Cloud returns fully hydrated objects — store compact to localStorage
                 inventory = cloud;
-                localStorage.setItem('ftf-inventory', JSON.stringify(inventory));
+                const compact = inventory.map(item => ({
+                    id: item.id,
+                    qty: item.quantity,
+                    shg: item.shg || null,
+                }));
+                localStorage.setItem('ftf-inventory', JSON.stringify(compact));
                 return true;
             }
         } catch (e) { console.error('Cloud load failed:', e); }
         return false;
     }
-
 
 
     function saveSortOptions() {
@@ -599,13 +656,20 @@ document.addEventListener('DOMContentLoaded', () => {
         div.className = `modal-item${isPending ? ' inv-pending' : ''}`;
         div.dataset.itemName = item.name;
         const filename = encodeURIComponent(item.name + '.webp');
+        let tempItem = { ...item, shg: shgStr === 'none' ? null : shgStr };
+        let val = window.FTFData.calculateItemValue(tempItem);
+        let displayVal = window.FTFData.formatFV(val);
+
         div.innerHTML = `
             <div class="modal-item-img">
                 <img src="${IMG_BASE}${filename}" loading="lazy"
                      onerror="this.src='${IMG_BASE}Default.webp'" alt="${item.name}">
                 ${isOwned ? '<div class="inv-owned-badge">Owned</div>' : ''}
             </div>
-            <div class="modal-item-name">${item.name}</div>`;
+            <div class="modal-item-info">
+                <div class="modal-item-name">${item.name}</div>
+                <div class="modal-item-value">${displayVal}</div>
+            </div>`;
         div.onclick = () => {
             const currentKey = `${item.name}-${currentSHG || 'none'}`;
             if (pendingAdds.has(currentKey)) {
@@ -613,6 +677,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 div.classList.remove('inv-pending');
             } else {
                 pendingAdds.set(currentKey, {
+                    id: item.id,
                     name: item.name,
                     rarity: item.rarity,
                     baseValue: item.value,   // always store raw base value
@@ -647,6 +712,10 @@ document.addEventListener('DOMContentLoaded', () => {
             itemList.innerHTML = '<p style="color:#999;text-align:center;padding:2rem;grid-column:1/-1;">No items found</p>';
             return;
         }
+        
+        // Apply sorting
+        filtered = window.FTFModalSort.sortItems(filtered, modalSortController?.getSort() ?? 'rarity', modalSortController?.getReverse() ?? false);
+        
         filteredItemCache = filtered;
         const frag = document.createDocumentFragment();
         filteredItemCache.slice(0, ITEM_PAGE_SIZE).forEach(i => frag.appendChild(createModalItem(i)));
@@ -952,37 +1021,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ].join(',');
     }
 
-    // --- VALUE SYNC ---
-    function syncInventoryValues() {
-        let hasUpdates = false;
-        // Use pre-built maps for O(1) lookups instead of O(n) allItems.find()
-        const idMap = window.FTFData?._itemIdMap;
-        const nameMap = window.FTFData?._itemNameMap;
-
-        inventory.forEach(invItem => {
-            const id = idMap?.[invItem.name];
-            const itemData = id ? nameMap?.[id] : allItems.find(i => i.name === invItem.name);
-            if (itemData) {
-                const oldValue = invItem.value || invItem.baseValue;
-                const newValue = itemData.value;
-                if (oldValue !== newValue) {
-                    invItem.value = newValue;
-                    invItem.baseValue = newValue;
-                    hasUpdates = true;
-                }
-                // Also sync stability data in case it changed
-                if (itemData.stability && itemData.stability !== invItem.stability) {
-                    invItem.stability = itemData.stability;
-                    invItem.stabilityType = window.FTFData.parseStabilityType(itemData.stability);
-                    hasUpdates = true;
-                }
-            }
-        });
-        if (hasUpdates) {
-            saveInventory();
-        }
-        return hasUpdates;
-    }
 
     // --- INIT ---
     let lastLoadedUserId = null;
@@ -1024,17 +1062,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     lastLoadedUserId = currentUserId;
                     const loaded = await loadInventoryFromCloud();
                     if (!loaded) {
-                        // Network/SDK error: fall back to local storage so user still sees their cached data
+                        // Network/SDK error: fall back to local storage
                         loadInventory();
+                        hydrateInventoryFromRaw();
                     }
                 }
             } else {
-                // Not authenticated/logged out: load local storage data
+                // Not authenticated: load and hydrate from localStorage
                 loadInventory();
+                hydrateInventoryFromRaw();
             }
 
-            // Exactly ONE sync and render at the very end of the load sequence
-            syncInventoryValues();
+            // syncInventoryValues() no longer needed — hydration always pulls fresh values
             renderInventory();
         } catch (e) {
             console.error('Inventory init error:', e);
@@ -1044,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             // Safe fallback on initialization failure
             loadInventory();
-            syncInventoryValues();
+            hydrateInventoryFromRaw();
             renderInventory();
         } finally {
             // Remove the loading spinner container
@@ -1067,12 +1106,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const loaded = await loadInventoryFromCloud();
                 if (loaded) {
-                    syncInventoryValues();
                     renderInventory();
                 }
             } else if (!user) {
-                // Signed out — reload from localStorage
-                loadInventory();
+                // Signed out — clear inventory and localStorage
+                localStorage.removeItem('ftf-inventory');
+                inventory = [];
                 renderInventory();
             }
         };
@@ -1125,6 +1164,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Escape' && sortDropdown?.classList.contains('open')) {
             sortDropdown.classList.remove('open');
         }
+    });
+
+    // Modal sort controls
+    modalSortController = window.FTFModalSort.setup({
+        dropdown: modalSortDropdown,
+        label: modalSortLabel,
+        menu: modalSortMenu,
+        reverseBtn: modalSortReversBtn,
+        defaultSort: 'rarity',
+        storageKey: 'ftf-modal-sort',
+        onChange: () => updateDisplayedItems(),
     });
 
     // Inventory search

@@ -226,10 +226,12 @@
                     // Build the items array: each entry is "itemId|qty|shg"
                     const items = [];
                     for (const item of inventory) {
-                        const itemId = this.itemIdMap[item.name];
+                        // Support both compact { id, qty, shg } and full { name, quantity, shg }
+                        const itemId = item.id || this.itemIdMap[item.name];
                         if (!itemId) continue;
+                        const qty = item.qty ?? item.quantity ?? 1;
                         const shg = (item.shg || '').trim();
-                        items.push(`${itemId}|${item.quantity || 1}|${shg}`);
+                        items.push(`${itemId}|${qty}|${shg}`);
                     }
 
                     // Single atomic write — replaces the entire inventory document
@@ -256,10 +258,12 @@
         async _createInventoryDoc(inventory) {
             const items = [];
             for (const item of inventory) {
-                const itemId = this.itemIdMap[item.name];
+                // Support both compact { id, qty, shg } and full { name, quantity, shg }
+                const itemId = item.id || this.itemIdMap[item.name];
                 if (!itemId) continue;
+                const qty = item.qty ?? item.quantity ?? 1;
                 const shg = (item.shg || '').trim();
-                items.push(`${itemId}|${item.quantity || 1}|${shg}`);
+                items.push(`${itemId}|${qty}|${shg}`);
             }
             await databases.createDocument(DB_ID, COL_INVENTORY, this.user.$id, {
                 user_id: this.user.$id,
@@ -297,6 +301,7 @@
                         const itemData = this.itemNameMap[itemId];
                         if (!itemData) return null;
                         return {
+                            id: itemId,
                             name: itemData.name,
                             rarity: itemData.rarity,
                             value: itemData.value,
@@ -327,6 +332,23 @@
 
                 const cloud = await this.loadInventoryFromCloud();
                 if (cloud && cloud.length > 0) return false; // Already has cloud data
+
+                // If compact format ({ id, qty, shg }), hydrate to full objects
+                // so saveInventoryToCloud can also fall back to name lookup
+                if (local[0] && local[0].id && !local[0].name) {
+                    if (Object.keys(this.itemNameMap).length === 0) this.buildItemMaps();
+                    const hydrated = local.map(entry => {
+                        const item = this.itemNameMap[entry.id];
+                        if (!item) return null;
+                        return {
+                            ...item,
+                            baseValue: item.value,
+                            quantity: Math.max(1, entry.qty ?? 1),
+                            shg: entry.shg || null,
+                        };
+                    }).filter(Boolean);
+                    return hydrated.length > 0 ? hydrated : false;
+                }
 
                 return local;
             } catch (e) {
@@ -484,9 +506,32 @@
                 btn.disabled = true;
                 btn.textContent = 'Uploading…';
                 if (Object.keys(this.itemIdMap).length === 0) this.buildItemMaps();
-                await this.saveInventoryToCloud(localData);
 
-
+                // Build items array and await the actual write directly (bypass debounce)
+                const items = [];
+                for (const item of localData) {
+                    const itemId = item.id || this.itemIdMap[item.name];
+                    if (!itemId) continue;
+                    const qty = item.qty ?? item.quantity ?? 1;
+                    const shg = (item.shg || '').trim();
+                    items.push(`${itemId}|${qty}|${shg}`);
+                }
+                try {
+                    await databases.updateDocument(DB_ID, COL_INVENTORY, this.user.$id, { items });
+                } catch (e) {
+                    if (e.code === 404) {
+                        try {
+                            await databases.createDocument(DB_ID, COL_INVENTORY, this.user.$id, {
+                                user_id: this.user.$id,
+                                items,
+                            });
+                        } catch (ce) {
+                            console.error('Migration upload error:', ce.message);
+                        }
+                    } else {
+                        console.error('Migration upload error:', e.message);
+                    }
+                }
 
                 overlay.remove();
                 if (typeof window._onAuthChange === 'function') window._onAuthChange(this.user);

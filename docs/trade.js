@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const HV_DIVISOR = 30;
     const MAX_SLOTS = 27;
     const MAX_QUANTITY = 100;
-    const ITEM_PAGE_SIZE = 40; 
+    const ITEM_PAGE_SIZE = 40;
+    const RARITY_ORDER = { Legendary: 0, Epic: 1, Rare: 2, Common: 3 }; 
 
     // --- STATE MANAGEMENT
     let allItems = [];
@@ -13,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let modeHV = false;
     let currentSHG = null;
     let currentRarity = 'all';
+    let modalSortController = null;
+    let _rawSavedTrade = null; // compact format before hydration
 
     // Lazy loading state
     let filteredItemCache = [];
@@ -31,6 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('item-search');
     const resetBtn = document.getElementById('reset-trade-btn');
     const raritySidebar = document.querySelector('.rarity-sidebar');
+    
+    // Modal sort controls
+    const modalSortDropdown = document.getElementById('modal-sort-dropdown');
+    const modalSortLabel = document.getElementById('modal-sort-label');
+    const modalSortMenu = document.getElementById('modal-sort-menu');
+    const modalSortReversBtn = document.getElementById('modal-sort-reverse');
     
     if (!yourGrid || !theirGrid || !modal || !itemList || !searchInput || !resetBtn || !raritySidebar) {
         console.error('Critical DOM elements missing. Check HTML structure.');
@@ -333,6 +342,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function createModalItemEl(item) {
         const div = document.createElement('div');
         div.className = 'modal-item';
+        let tempItem = { ...item, shg: currentSHG || null };
+        let val = window.FTFData.calculateItemValue(tempItem);
+        let displayVal = formatNumberForDisplay(val);
+
         div.innerHTML = `
             <div class="modal-item-img">
                 <img src="items/${encodeURIComponent(item.name)}.webp"
@@ -340,7 +353,10 @@ document.addEventListener('DOMContentLoaded', () => {
                      onerror="this.src='items/Default.webp'"
                      alt="${item.name}">
             </div>
-            <div class="modal-item-name">${item.name}</div>`;
+            <div class="modal-item-info">
+                <div class="modal-item-name">${item.name}</div>
+                <div class="modal-item-value">${displayVal}</div>
+            </div>`;
         
         div.onclick = () => {
             const stabilityType = window.FTFData.parseStabilityType(item.stability);
@@ -376,6 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const activeShgBtn = raritySidebar.querySelector('.shg-btn.active');
             if (activeShgBtn) activeShgBtn.classList.remove('active');
         }
+        
         
         if (modal) modal.style.display = 'flex';
         // Defer item list build so modal paint happens first
@@ -423,7 +440,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
                 </div>
-                <div class="modal-item-name">Adds</div>`;
+                <div class="modal-item-info">
+                    <div class="modal-item-name">Adds</div>
+                    <div class="modal-item-value">&nbsp;</div>
+                </div>`;
             
             div.onclick = () => {
                 activeArray.push({ 
@@ -452,6 +472,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return;
         }
+
+        // Apply sorting
+        filtered = window.FTFModalSort.sortItems(filtered, modalSortController?.getSort() ?? 'rarity', modalSortController?.getReverse() ?? false);
 
         // Cache the full filtered list for lazy loading
         filteredItemCache = filtered;
@@ -484,8 +507,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LOCALSTORAGE PERSISTENCE ---
     function saveTradeToLocalStorage() {
         try {
-            localStorage.setItem('ftf-your-trade', JSON.stringify(yourTrade));
-            localStorage.setItem('ftf-their-trade', JSON.stringify(theirTrade));
+            const compact = (arr) => arr.map(item => {
+                if (item.isAdds) return { isAdds: true, qty: item.quantity };
+                return { id: item.id, qty: item.quantity, shg: item.shg || null };
+            });
+            localStorage.setItem('ftf-your-trade', JSON.stringify(compact(yourTrade)));
+            localStorage.setItem('ftf-their-trade', JSON.stringify(compact(theirTrade)));
         } catch (e) {
             console.error('Failed to save trades to localStorage:', e);
         }
@@ -493,15 +520,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadTradeFromLocalStorage() {
         try {
-            const savedYourTrade = localStorage.getItem('ftf-your-trade');
-            const savedTheirTrade = localStorage.getItem('ftf-their-trade');
-            if (savedYourTrade) yourTrade = JSON.parse(savedYourTrade);
-            if (savedTheirTrade) theirTrade = JSON.parse(savedTheirTrade);
+            const rawYour = localStorage.getItem('ftf-your-trade');
+            const rawTheir = localStorage.getItem('ftf-their-trade');
+            _rawSavedTrade = {
+                your: rawYour ? JSON.parse(rawYour) : [],
+                their: rawTheir ? JSON.parse(rawTheir) : [],
+            };
         } catch (e) {
             console.error('Failed to load trades from localStorage:', e);
-            yourTrade = [];
-            theirTrade = [];
+            _rawSavedTrade = { your: [], their: [] };
         }
+    }
+
+    function hydrateTradesFromRaw() {
+        if (!_rawSavedTrade) return;
+        const hydrate = (compactArr) => compactArr.map(entry => {
+            if (entry.isAdds) {
+                return {
+                    name: 'Adds', baseValue: 0, quantity: entry.qty ?? 0,
+                    rarity: 'special', stability: null, stabilityType: null,
+                    shg: null, isAdds: true
+                };
+            }
+            // Look up by id (new format), fall back to name for old saved data
+            const item = entry.id
+                ? allItems.find(i => i.id === entry.id)
+                : allItems.find(i => i.name === entry.name);
+            if (!item) return null;
+            return {
+                ...item,
+                baseValue: item.value,
+                quantity: entry.qty ?? 1,
+                shg: entry.shg || null,
+                stabilityType: window.FTFData.parseStabilityType(item.stability),
+            };
+        }).filter(Boolean);
+        yourTrade = hydrate(_rawSavedTrade.your);
+        theirTrade = hydrate(_rawSavedTrade.their);
+        _rawSavedTrade = null;
     }
 
     // --- INITIALIZATION ---
@@ -516,6 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await window.FTFData.init();
             allItems = window.FTFData.allItems;
+            hydrateTradesFromRaw();
             updateAll();
         } catch (e) { 
             console.error('Initialization error:', e);
@@ -613,6 +670,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
     }
+
+    // Modal sort controls
+    modalSortController = window.FTFModalSort.setup({
+        dropdown: modalSortDropdown,
+        label: modalSortLabel,
+        menu: modalSortMenu,
+        reverseBtn: modalSortReversBtn,
+        defaultSort: 'rarity',
+        storageKey: 'ftf-modal-sort',
+        onChange: () => updateDisplayedItems(),
+    });
 
     init();
 });

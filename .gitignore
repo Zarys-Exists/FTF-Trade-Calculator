@@ -12,7 +12,7 @@ env/
 dist/
 build/
 .pytest_cache/
-docs/app.py
+app.py
 skills-lock.json
 .agents/
 node_modules/
