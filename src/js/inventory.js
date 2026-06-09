@@ -822,6 +822,7 @@ function updateDisplayedItems() {
     filtered,
     modalSortController?.getSort() ?? "rarity",
     modalSortController?.getReverse() ?? false,
+    currentSHG
   );
 
   filteredItemCache = filtered;
@@ -1419,6 +1420,7 @@ raritySidebar?.addEventListener("click", (e) => {
       currentSHG = val;
       shgBtn.classList.add("active");
     }
+    setTimeout(() => updateDisplayedItems(), 0);
   }
 });
 

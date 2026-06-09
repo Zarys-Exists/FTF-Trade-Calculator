@@ -508,6 +508,7 @@ function updateDisplayedItems() {
     filtered,
     modalSortController?.getSort() ?? "rarity",
     modalSortController?.getReverse() ?? false,
+    currentSHG
   );
 
   filteredItemCache = filtered;
@@ -626,7 +627,7 @@ function renderFvHvSwitch() {
   toggle.className = "fv-hv-switch";
   toggle.innerHTML = `
             <div class="label">Mode</div>
-            <div class="fv-hv-toggle" id="fv-hv-toggle" title="Toggle between Full Value (FV) and Huge Value (HV) modes">
+            <div class="fv-hv-toggle" id="fv-hv-toggle" title="Toggle between Flee Value (FV) and Hunter Value (HV) modes">
                 <div class="option">fv</div><div class="option">hv</div>
                 <div class="knob">fv</div>
             </div>`;
@@ -637,6 +638,9 @@ function renderFvHvSwitch() {
     toggle.querySelector(".fv-hv-toggle").classList.toggle("hv", modeHV);
     toggle.querySelector(".knob").textContent = modeHV ? "hv" : "fv";
     updateAll();
+    if (modal && modal.style.display === "flex") {
+      updateDisplayedItems();
+    }
   };
 
   const infoDiv = document.createElement("div");
@@ -708,6 +712,7 @@ if (raritySidebar) {
         shgBtn.classList.add("active");
       }
 
+      setTimeout(() => updateDisplayedItems(), 0);
       updateAll();
     }
   };

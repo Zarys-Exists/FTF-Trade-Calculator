@@ -119,7 +119,7 @@ export const FTFData = {
 export const FTFModalSort = {
   RARITY_ORDER: { Legendary: 0, Epic: 1, Rare: 2, Common: 3 },
 
-  sortItems(items, sortBy = "rarity", reverse = false) {
+  sortItems(items, sortBy = "rarity", reverse = false, currentSHG = null) {
     const sorted = [...items];
     const dir = reverse ? -1 : 1;
 
@@ -128,16 +128,17 @@ export const FTFModalSort = {
         const rarA = FTFModalSort.RARITY_ORDER[a.rarity] ?? 99;
         const rarB = FTFModalSort.RARITY_ORDER[b.rarity] ?? 99;
         if (rarA !== rarB) return dir * (rarA - rarB);
-        const valA = a.value ?? 0;
-        const valB = b.value ?? 0;
+        
+        const valA = FTFData.calculateItemValue({...a, shg: currentSHG}) ?? 0;
+        const valB = FTFData.calculateItemValue({...b, shg: currentSHG}) ?? 0;
         return -1 * (valA - valB);
       });
     }
 
     if (sortBy === "value") {
       return sorted.sort((a, b) => {
-        const valA = a.value ?? 0;
-        const valB = b.value ?? 0;
+        const valA = FTFData.calculateItemValue({...a, shg: currentSHG}) ?? 0;
+        const valB = FTFData.calculateItemValue({...b, shg: currentSHG}) ?? 0;
         return dir * (valB - valA);
       });
     }

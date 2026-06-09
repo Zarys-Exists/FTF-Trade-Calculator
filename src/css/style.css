@@ -29,6 +29,7 @@ a {
   --button-hover: #5400b5;
   --button-active: #431686;
 
+  --rarity-hover: var(--button-active);
   --rarity-active: hsl(267, 100%, 50%);
   --shg-hover: var(--button-active);
   --shg-active: hsl(267, 100%, 50%);
@@ -73,9 +74,10 @@ html.dark-theme {
   --button-bg: var(--color-accent);
   --button-hover: #3a3a3a;
 
-  --rarity-active: #3e3e3e;
-  --shg-hover: #3a3a3a;
-  --shg-active: var(--rarity-active);
+  --rarity-hover: #4a4a4a;
+  --rarity-active: #6b6b6b;
+  --shg-hover: #4a4a4a;
+  --shg-active: #6b6b6b;
   --item-hover: #606060;
   --focus-shadow: rgba(85, 85, 85, 0.25);
   --knob-shadow: rgba(42, 42, 42, 0.25);
@@ -956,7 +958,7 @@ body.drawer-open {
 }
 
 .rarity-filter-btn:hover {
-  background-color: var(--rarity-active);
+  background-color: var(--rarity-hover);
   border-color: var(--color-primary);
 }
 
