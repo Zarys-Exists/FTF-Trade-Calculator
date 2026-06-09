@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FTF Trade Calculator - Use Guide</title>
+    <meta
+      name="description"
+      content="Use Guide for the FTF Calculator. Calculate your Flee the Facility trades, keep track of your inventory and much more!"
+    />
+    <meta
+      name="keywords"
+      content="FTF guide, trade calculator, Flee The Facility trade guide, FTF trade calculator"
+    />
+    <meta name="author" content="Zarys" />
+    <meta name="robots" content="index, follow" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="FTF Trade Calculator - Use Guide" />
+    <meta
+      property="og:description"
+      content="Complete guide on how to use the FTF Calculator to evaluate your flee the facility trades, keep track of your collection and more."
+    />
+    <meta
+      property="og:url"
+      content="https://zarys-exists.github.io/FTF-Trade-Calculator/guide.html"
+    />
+    <meta
+      property="og:image"
+      content="https://zarys-exists.github.io/FTF-Trade-Calculator/favicon/favicon-32x32.png"
+    />
+
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-D8W9RXNFB2"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-D8W9RXNFB2");
+    </script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" type="image/x-icon" href="favicon/favicon.ico" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="favicon/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="favicon/favicon-16x16.png"
+    />
+    <link rel="apple-touch-icon" href="favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="favicon/site.webmanifest" />
+
+    <script>
+      if (localStorage.getItem("theme") !== "light") {
+        document.documentElement.classList.add("dark-theme");
+      }
+    </script>
+  </head>
+  <body>
+    <main class="guide-content">
+      <section class="guide-section">
+        <h2>Introduction</h2>
+        <p>
+          This site has a variety of uses like calculating the value of your ftf
+          trades, keeping track of your ftf collection and more. This guide
+          covers most of the basic and some of the more subtle features of the
+          site. You are welcome to send any feedback or suggestions to my
+          discord (@Zvarys)
+        </p>
+      </section>
+
+      <section class="guide-section">
+        <h2>Trade Calculator</h2>
+        <ul class="guide-list">
+          <li>
+            <strong>Value Source:</strong> All values displayed on this site are
+            from the
+            <a
+              href="https://ftf-values.base44.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >official FTF values website</a
+            >
+            and are usually updated within 10 minutes of each value list update.
+          </li>
+          <li>
+            <strong>Items:</strong> The items are sorted by rarity and in the
+            decreasing order of their value. Clicking on a filled slot will
+            remove that item from the calculator. The "Adds" button allows you
+            to add a hypothetical item that adopts the value of your choosing.
+          </li>
+          <li>
+            <strong>Set/Broken:</strong> Items are by default added to the
+            calculator as a set and will have the set value as per the value
+            list. This can be changed by clicking the 'H' or 'G' button before
+            choosing the item, which will make the site consider it as a hammer
+            or gem respectively and show the appropriate value.
+          </li>
+          <li>
+            <strong>Hammer/Gem ratio:</strong> The value of a broken (h/g) item
+            is dependent on a few factors, including its rarity. For
+            legendaries, the value of a set is split with 70% to the hammer and
+            30% to the gem. For seasonals, it's 50/50. However, there is an
+            exception for sets with neon gems (aurora, cherry pie, etc.), in
+            which case the ratio is instead 20/80 for hammer/gem respectively.
+          </li>
+          <li>
+            <strong>Unit Switching:</strong> You can switch between the old (HV)
+            and new (FV) units of value through the toggle at the bottom right
+            of the calculator. 1 HV = 30 FV
+          </li>
+          <li>
+            <strong>Item Stability:</strong> The border color of an item slot
+            indicates the stability of that item, which relates to the current
+            demand of that item. The colour code for each stability is given
+            below. <br />
+            <span
+              class="stability-color"
+              style="--stability-text-color: var(--stability-label-rising)"
+              >Rising</span
+            >
+            <span
+              class="stability-color"
+              style="--stability-text-color: var(--stability-label-improving)"
+              >Doing Well</span
+            >
+            <span
+              class="stability-color"
+              style="--stability-text-color: var(--stability-label-doing-well)"
+              >Improving</span
+            >
+            <span
+              class="stability-color"
+              style="--stability-text-color: var(--stability-label-stable)"
+              >Stable</span
+            >
+            <span
+              class="stability-color"
+              style="--stability-text-color: var(--stability-label-fluctuating)"
+              >Fluctuating</span
+            >
+            <span
+              class="stability-color"
+              style="--stability-text-color: var(--stability-label-struggling)"
+              >Struggling</span
+            >
+            <span
+              class="stability-color"
+              style="--stability-text-color: var(--stability-label-receding)"
+              >Receding</span
+            >
+            <span
+              class="stability-color"
+              style="--stability-text-color: var(--stability-label-dropping)"
+              >Dropping</span
+            >
+          </li>
+        </ul>
+      </section>
+
+      <section class="guide-section">
+        <h2>Inventory</h2>
+        <ul class="guide-list">
+          <li>
+            <strong>Usage:</strong> You can use the Inventory feature to track
+            your ftf collection, fuel your addiction to keep growing it,
+            calculate your inventory value and more. Press "Add items" to start
+            cataloguing your items.
+          </li>
+          <li>
+            <strong>Items:</strong> Unlike the trade calculator, you can choose
+            multiple items at once to reduce the hassle. If you would like to
+            add broken items, just press the h/g button for those specific
+            items, and disable it while choosing sets. Pleaes note that pressing
+            'Cancel' will lead to the selected items being discarded. Items that
+            have already been added will have an "Owned" badge on it, but you
+            can still add it again.
+          </li>
+          <li>
+            <strong>Stats</strong> Stats are displayed for all sets present in
+            your inventory. It shows you your total inventory value by rarity,
+            completion rate for each rarity and quantity of items. Please note
+            that broken items are NOT displayed in the completion stats nor the
+            Unique/Total quantity, however, their value is accounted for in the
+            total value. Also, the value stats do not show decimal values so if
+            your net worth is a yeti hammer...whoops.
+          </li>
+          <li>
+            <strong>Sorting:</strong> Items are by default sorted by value but
+            you can choose to sort by name, rarity or added order. You can also
+            use the arrow button next to the sort to reverse the sorting order.
+          </li>
+          <li>
+            <strong>Save as Image:</strong> This button generates an image (or
+            multiple) of your inventory. You can also write a custom note which
+            will be shown on each image. A maximum of 56 items can be displayed
+            per page, and the items are displayed in the same order they are
+            sorted in. Each image shows the total value of every item in that
+            image, their rarity and quantity. Similar to the trade calculator,
+            the border of each item shows its stability.
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <script type="module" src="js/guide-main.js"></script>
+  </body>
+</html>

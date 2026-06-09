@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FTF Trade Calculator</title>
+    <meta
+      name="description"
+      content="FTF trade calculator shows you whether your flee the facility 
+    trades are fair, wins, or losses. It is easy to navigate, includes values for every item, and uses the official value list"
+    />
+    <meta
+      name="keywords"
+      content="FTF, Flee The Facility, ftf trade calculator, Zarys's FTF calculator, ftf value list, zarys calculator"
+    />
+    <meta name="author" content="Zarys" />
+    <meta name="robots" content="index, follow" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="FTF Trade Calculator" />
+    <meta
+      property="og:description"
+      content="Evaluate your Flee The Facility trades with our FTF Trade Calculator. It uses the official values to determine if your trades are fair, wins, or losses."
+    />
+    <meta
+      property="og:url"
+      content="https://zarys-exists.github.io/FTF-Trade-Calculator/"
+    />
+    <meta
+      property="og:image"
+      content="https://zarys-exists.github.io/FTF-Trade-Calculator/favicon/favicon-32x32.png"
+    />
+
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-D8W9RXNFB2"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-D8W9RXNFB2");
+    </script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="icon" type="image/x-icon" href="favicon/favicon.ico" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="favicon/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="favicon/favicon-16x16.png"
+    />
+    <link rel="apple-touch-icon" href="favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="favicon/site.webmanifest" />
+    <script>
+      if (localStorage.getItem("theme") !== "light") {
+        document.documentElement.classList.add("dark-theme");
+      }
+    </script>
+  </head>
+  <body>
+    <main class="trade-page-container">
+      <div class="wfl-bar-wrapper">
+        <div class="wfl-bar-labels">
+          <span>Win</span>
+          <span>Fair</span>
+          <span>Lose</span>
+        </div>
+        <div class="wfl-bar-track">
+          <div id="wfl-bar-fill" class="wfl-bar-fill"></div>
+        </div>
+      </div>
+
+      <div class="trade-layout">
+        <div class="offer-container">
+          <h2>Your Offer</h2>
+          <div class="trade-grid" id="your-offer-grid"></div>
+          <div class="total-value" id="your-total">0 fv</div>
+        </div>
+
+        <div class="wfl-container">
+          <div id="wfl-result">--</div>
+          <button id="reset-trade-btn">Reset</button>
+        </div>
+
+        <div class="offer-container">
+          <h2>Their Offer</h2>
+          <div class="trade-grid" id="their-offer-grid"></div>
+          <div class="total-value" id="their-total">0 fv</div>
+        </div>
+      </div>
+    </main>
+
+    <div id="item-modal" class="modal-overlay">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Select an Item</h3>
+        <div class="modal-body">
+          <div class="rarity-sidebar">
+            <button class="rarity-filter-btn active" data-rarity="all">
+              All
+            </button>
+            <button class="rarity-filter-btn" data-rarity="legendary">
+              Legendary
+            </button>
+            <button class="rarity-filter-btn" data-rarity="epic">Epic</button>
+            <button class="rarity-filter-btn" data-rarity="rare">Rare</button>
+            <button class="rarity-filter-btn" data-rarity="common">
+              Common
+            </button>
+            <div class="shg-buttons">
+              <button class="shg-btn" data-shg="h" title="Hammer mode">
+                H
+              </button>
+              <button class="shg-btn" data-shg="g" title="Gem mode">G</button>
+            </div>
+          </div>
+          <div class="item-display-area">
+            <div class="modal-search-sort-wrapper">
+              <input
+                type="text"
+                id="item-search"
+                placeholder="Search for items..."
+              />
+              <div class="modal-sort-controls">
+                <button
+                  id="modal-sort-dropdown"
+                  class="modal-sort-trigger"
+                  aria-label="Sort items"
+                >
+                  <span id="modal-sort-label">Rarity</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    width="14"
+                    height="14"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div id="modal-sort-menu" class="modal-sort-menu">
+                  <button
+                    class="modal-sort-option active"
+                    data-sort-value="rarity"
+                    data-sort-label="Rarity"
+                  >
+                    Rarity
+                  </button>
+                  <button
+                    class="modal-sort-option"
+                    data-sort-value="value"
+                    data-sort-label="Value"
+                  >
+                    Value
+                  </button>
+                  <button
+                    class="modal-sort-option"
+                    data-sort-value="alphabetic"
+                    data-sort-label="Name"
+                  >
+                    Name
+                  </button>
+                </div>
+                <button
+                  id="modal-sort-reverse"
+                  class="modal-sort-reverse"
+                  title="Reverse sort order"
+                  aria-label="Reverse sort order"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M6 2v8M3 5l3-3 3 3" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div id="item-list" class="item-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="js/trade.js"></script>
+  </body>
+</html>

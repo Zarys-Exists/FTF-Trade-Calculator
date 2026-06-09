@@ -1,0 +1,23 @@
+{
+  "name": "ftf-trade-calculator",
+  "version": "1.0.0",
+  "description": "FTF Trade Calculator - Evaluate your Flee The Facility trades",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zarys-Exists/FTF-Trade-Calculator.git"
+  },
+  "author": "Zarys",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^8.0.16"
+  },
+  "dependencies": {
+    "appwrite": "^26.0.0"
+  }
+}
