@@ -720,10 +720,10 @@ body.drawer-open {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  align-self: center;
+  align-self: stretch;
   flex: 0 0 clamp(9rem, 18vw, 12rem);
   width: clamp(9rem, 18vw, 12rem);
+  gap: 0;
 }
 
 .fv-hv-switch {
@@ -845,7 +845,7 @@ body.drawer-open {
   height: auto;
   display: block;
   line-height: 1.1;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   box-sizing: border-box;
 }
 
@@ -869,23 +869,46 @@ body.drawer-open {
   margin-top: 0.15rem;
 }
 
-#reset-trade-btn {
+#reset-trade-btn,
+#save-trade-btn {
   background: var(--button-bg);
   color: var(--color-text);
   border: none;
+  white-space: nowrap;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   cursor: pointer;
   font-size: 0.9rem;
-  width: 6rem;
+  width: 6.5rem;
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease;
 }
 
-#reset-trade-btn:hover {
+#reset-trade-btn:hover,
+#save-trade-btn:hover {
   background: var(--button-hover);
 }
 
-#reset-trade-btn:active {
+#reset-trade-btn:active,
+#save-trade-btn:active {
   transform: scale(0.95);
+}
+
+#save-trade-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.wfl-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+  position: relative;
 }
 
 .modal-overlay {
@@ -1556,18 +1579,18 @@ html.dark-theme .modal-item-value {
   #wfl-result {
     font-size: 2.2rem;
     padding: 0.35rem 0.3rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0;
     line-height: 1.2;
   }
   .wfl-mode {
     margin-top: 0.05rem;
   }
 
-  #reset-trade-btn {
+  #reset-trade-btn,
+  #save-trade-btn {
     padding: 0.3rem 0.6rem;
     font-size: 0.75rem;
-    width: auto;
-    min-width: 4rem;
+    width: 6rem;
   }
 
   .fv-hv-switch {
@@ -1773,17 +1796,23 @@ html.dark-theme .modal-item-value {
   .wfl-container {
     flex: 0 0 clamp(5rem, 17vw, 8rem);
     width: clamp(5rem, 17vw, 8rem);
-    gap: 0.4rem;
+    gap: 0;
     padding: 0;
+  }
+  .wfl-actions {
+    gap: 0.3rem;
+    margin-top: 0.6rem;
   }
   #wfl-result {
     font-size: 1.7rem;
     padding: 0.3rem 0.3rem;
   }
-  #reset-trade-btn {
+  #reset-trade-btn,
+  #save-trade-btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.65rem;
-    min-width: 3.5rem;
+    width: 5rem;
+    border-radius: 0.35rem;
   }
 
   .fv-hv-switch {
@@ -1934,17 +1963,22 @@ html.dark-theme .modal-item-value {
   .wfl-container {
     flex: 0 0 clamp(8rem, 18vw, 16rem);
     width: clamp(8rem, 18vw, 16rem);
-    gap: 0.8rem;
+    gap: 0;
     padding: 0;
+  }
+  .wfl-actions {
+    gap: 0.6rem;
+    margin-top: 0.8rem;
   }
   #wfl-result {
     font-size: 2rem;
     padding: 0.4rem 0.3rem;
   }
-  #reset-trade-btn {
+  #reset-trade-btn,
+  #save-trade-btn {
     padding: 0.4rem 0.8rem;
     font-size: 1rem;
-    min-width: auto;
+    width: 6.5rem;
   }
 
   .fv-hv-switch {
@@ -2270,11 +2304,22 @@ html.dark-theme .modal-item-value {
 }
 
 .sync-status {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 500;
-  margin-left: 0.5rem;
-  vertical-align: middle;
-  transition: color 0.3s ease;
+  margin-right: 0.25rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: var(--bg-lighter);
+  border: 1px solid var(--border-color);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.sync-status:empty {
+  display: none;
 }
 
 .sync-status.sync-saving {
@@ -2285,4 +2330,8 @@ html.dark-theme .modal-item-value {
 }
 .sync-status.sync-error {
   color: var(--stability-label-dropping);
+  cursor: pointer;
+}
+.sync-status.sync-error:hover {
+  background: var(--bg-hover);
 }

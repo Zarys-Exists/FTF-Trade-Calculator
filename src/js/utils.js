@@ -259,3 +259,255 @@ export const FTFModalSort = {
     };
   },
 };
+
+export class FTFModalController {
+  constructor(config) {
+    this.allItems = config.allItems || [];
+    this.renderItem = config.renderItem;
+    this.showAddsItem = config.showAddsItem || false;
+    this.onAddsClick = config.onAddsClick || null;
+    this.pageSize = config.pageSize || 40;
+    this.onCloseRequest = config.onCloseRequest || (() => true);
+    this.onOpen = config.onOpen || (() => {});
+    this.onClose = config.onClose || (() => {});
+
+    this.modal = document.getElementById("item-modal");
+    this.itemList = document.getElementById("item-list");
+    this.searchInput = document.getElementById("item-search");
+    this.raritySidebar = document.querySelector(".rarity-sidebar");
+    this.closeBtn = document.querySelector(".close-modal");
+
+    this.sortController = config.sortController;
+
+    this.currentRarity = "all";
+    this.currentSHG = null;
+    this.filteredItemCache = [];
+    this.renderedItemCount = 0;
+    this.isLoadingMore = false;
+    this.itemListObserver = null;
+    this.searchDebounceTimer = null;
+
+    this.initEvents();
+  }
+
+  initEvents() {
+    if (this.closeBtn) {
+      this.closeBtn.onclick = () => this.tryClose();
+    }
+    if (this.modal) {
+      this.modal.onclick = (e) => {
+        if (e.target === this.modal) this.tryClose();
+      };
+    }
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && this.modal && this.modal.style.display === "flex") {
+        this.tryClose();
+      }
+    });
+
+    if (this.searchInput) {
+      this.searchInput.oninput = () => {
+        if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
+        this.searchDebounceTimer = setTimeout(() => {
+          this.updateDisplayedItems();
+        }, 150);
+      };
+    }
+
+    if (this.raritySidebar) {
+      this.raritySidebar.onclick = (e) => {
+        if (e.target.classList.contains("rarity-filter-btn")) {
+          const activeBtn = this.raritySidebar.querySelector(".rarity-filter-btn.active");
+          if (activeBtn) activeBtn.classList.remove("active");
+          e.target.classList.add("active");
+          this.currentRarity = e.target.dataset.rarity;
+          setTimeout(() => this.updateDisplayedItems(), 0);
+        }
+
+        const shgBtn = e.target.closest(".shg-btn");
+        if (shgBtn) {
+          const val = shgBtn.dataset.shg;
+          const activeShgBtn = this.raritySidebar.querySelector(".shg-btn.active");
+
+          if (this.currentSHG === val) {
+            this.currentSHG = null;
+            if (activeShgBtn) activeShgBtn.classList.remove("active");
+          } else {
+            if (activeShgBtn) activeShgBtn.classList.remove("active");
+            this.currentSHG = val;
+            shgBtn.classList.add("active");
+          }
+
+          setTimeout(() => this.updateDisplayedItems(), 0);
+        }
+      };
+    }
+  }
+
+  tryClose() {
+    if (this.onCloseRequest()) {
+      this.close();
+    }
+  }
+
+  open() {
+    this.currentRarity = "all";
+    this.currentSHG = null;
+    if (this.searchInput) this.searchInput.value = "";
+
+    if (this.raritySidebar) {
+      const activeBtn = this.raritySidebar.querySelector(".rarity-filter-btn.active");
+      if (activeBtn) activeBtn.classList.remove("active");
+      const allBtn = this.raritySidebar.querySelector('.rarity-filter-btn[data-rarity="all"]');
+      if (allBtn) allBtn.classList.add("active");
+      const activeShgBtn = this.raritySidebar.querySelector(".shg-btn.active");
+      if (activeShgBtn) activeShgBtn.classList.remove("active");
+    }
+
+    this.onOpen();
+
+    if (this.modal) this.modal.style.display = "flex";
+
+    setTimeout(() => this.updateDisplayedItems(), 0);
+
+    if (this.searchInput && window.innerWidth > 768) {
+      setTimeout(() => this.searchInput.focus(), 100);
+    }
+  }
+
+  close() {
+    if (this.modal) this.modal.style.display = "none";
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+      this.searchDebounceTimer = null;
+    }
+    this.disconnectObserver();
+    this.onClose();
+  }
+
+  disconnectObserver() {
+    if (this.itemListObserver) {
+      this.itemListObserver.disconnect();
+      this.itemListObserver = null;
+    }
+  }
+
+  setupScrollObserver() {
+    this.disconnectObserver();
+    const existingSentinel = document.getElementById("item-list-sentinel");
+    if (existingSentinel) existingSentinel.remove();
+
+    const sentinel = document.createElement("div");
+    sentinel.id = "item-list-sentinel";
+    sentinel.style.cssText = "height:1px;width:100%;grid-column:1/-1;";
+    this.itemList.appendChild(sentinel);
+    
+    this.itemListObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !this.isLoadingMore) this.loadNextBatch();
+      },
+      { root: this.itemList, rootMargin: "100px" }
+    );
+    this.itemListObserver.observe(sentinel);
+  }
+
+  loadNextBatch() {
+    if (this.renderedItemCount >= this.filteredItemCache.length) return;
+    
+    this.isLoadingMore = true;
+    const existingSentinel = document.getElementById("item-list-sentinel");
+    if (existingSentinel) existingSentinel.remove();
+
+    const batch = this.filteredItemCache.slice(
+      this.renderedItemCount,
+      this.renderedItemCount + this.pageSize
+    );
+    
+    const fragment = document.createDocumentFragment();
+    batch.forEach((item) => fragment.appendChild(this.renderItem(item, this.currentSHG)));
+    
+    this.itemList.appendChild(fragment);
+    this.renderedItemCount += batch.length;
+    
+    if (this.renderedItemCount < this.filteredItemCache.length) {
+      this.setupScrollObserver();
+    }
+    
+    this.isLoadingMore = false;
+  }
+
+  updateDisplayedItems() {
+    if (!this.itemList || !this.searchInput) return;
+
+    this.disconnectObserver();
+    this.itemList.innerHTML = "";
+    this.renderedItemCount = 0;
+    this.isLoadingMore = false;
+
+    if (window.itemLoadError || this.allItems.length === 0) {
+      this.itemList.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #999;">No items found</div>';
+      return;
+    }
+
+    const query = this.searchInput.value.toLowerCase().trim();
+    let filtered = this.allItems;
+    
+    if (this.currentRarity !== "all") {
+      filtered = filtered.filter((i) => i.rarity.toLowerCase() === this.currentRarity);
+    }
+    if (query) {
+      filtered = filtered.filter((i) => i.name.toLowerCase().includes(query));
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    const willShowAdds = this.showAddsItem && (!query || "adds".toLowerCase().includes(query));
+    if (willShowAdds && this.onAddsClick) {
+      const div = document.createElement("div");
+      div.className = "modal-item";
+      div.innerHTML = `
+          <div class="modal-item-img" style="display: flex; align-items: center; justify-content: center; background: transparent;">
+              <svg viewBox="0 0 24 24" style="width: 80%; height: 80%;" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+          </div>
+          <div class="modal-item-info">
+              <div class="modal-item-name">Adds</div>
+              <div class="modal-item-value">&nbsp;</div>
+          </div>`;
+      div.onclick = this.onAddsClick;
+      fragment.appendChild(div);
+    }
+
+    if (filtered.length === 0) {
+      this.itemList.appendChild(fragment);
+      if (!willShowAdds) {
+        const msg = document.createElement("p");
+        msg.style.cssText = "color:#999;text-align:center;padding:2rem;grid-column:1/-1;";
+        msg.textContent = "No items found";
+        this.itemList.appendChild(msg);
+      }
+      return;
+    }
+
+    filtered = FTFModalSort.sortItems(
+      filtered,
+      this.sortController?.getSort() ?? "rarity",
+      this.sortController?.getReverse() ?? false,
+      this.currentSHG
+    );
+
+    this.filteredItemCache = filtered;
+
+    const firstBatch = this.filteredItemCache.slice(0, this.pageSize);
+    firstBatch.forEach((item) => fragment.appendChild(this.renderItem(item, this.currentSHG)));
+    
+    this.renderedItemCount = firstBatch.length;
+    this.itemList.appendChild(fragment);
+
+    if (this.renderedItemCount < this.filteredItemCache.length) {
+      this.setupScrollObserver();
+    }
+  }
+}
