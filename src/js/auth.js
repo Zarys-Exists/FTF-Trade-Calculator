@@ -49,7 +49,6 @@ export const FTFAuth = {
           this._notifyReady();
         });
     } else {
-      // Normal page load — check for an existing session
       account
         .get()
         .then((user) => {
@@ -161,7 +160,7 @@ export const FTFAuth = {
       const doc = await databases.createDocument(
         DB_ID,
         COL_PROFILES,
-        this.user.$id, // Use uid as document ID — enforces one-per-user
+        this.user.$id,
         {
           user_id: this.user.$id,
           username: username,
@@ -356,7 +355,6 @@ export const FTFAuth = {
     }
   },
 
-  // --- LOCAL STORAGE MIGRATION ---
   async migrateLocalStorage() {
     try {
       const saved = localStorage.getItem("ftf-inventory");
@@ -412,7 +410,6 @@ export const FTFAuth = {
     }
   },
 
-  // --- UI ---
   updateAuthUI() {
     const btn = document.getElementById("auth-btn");
     if (!btn) return;
