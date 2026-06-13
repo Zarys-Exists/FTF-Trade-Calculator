@@ -1,4 +1,4 @@
-import { FTFData, FTFModalSort } from "./utils.js";
+import { FTFData, FTFModalSort, FTFModalController } from "./utils.js";
 import { FTFAuth } from "./auth.js";
 import "./nav.js";
 
@@ -20,10 +20,8 @@ let currentRarity = "all";
 let modalSortController = null;
 let _rawSavedTrade = null;
 
-let filteredItemCache = [];
-let renderedItemCount = 0;
-let isLoadingMore = false;
-let itemListObserver = null;
+let filteredItemCache = []; // Keeping this for reference if needed, but the controller handles it
+let modalController = null;
 
 const themeToggle = document.getElementById("theme-toggle");
 const htmlElement = document.documentElement;
@@ -320,221 +318,20 @@ function updateWFL(yourTradeVal, theirTradeVal, yourAddsVal, theirAddsVal) {
 let activeArray = null;
 let searchDebounceTimer = null;
 
-function setupScrollObserver() {
-  if (itemListObserver) {
-    itemListObserver.disconnect();
-    itemListObserver = null;
-  }
+// loadNextBatch deleted
 
-  const sentinel = document.createElement("div");
-  sentinel.id = "item-list-sentinel";
-  sentinel.style.cssText = "height:1px;width:100%;grid-column:1/-1;";
-  itemList.appendChild(sentinel);
-
-  itemListObserver = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting && !isLoadingMore) {
-        loadNextItemBatch();
-      }
-    },
-    { root: itemList, rootMargin: "100px" },
-  );
-
-  itemListObserver.observe(sentinel);
-}
-
-function loadNextItemBatch() {
-  if (renderedItemCount >= filteredItemCache.length) return;
-
-  isLoadingMore = true;
-
-  const sentinel = document.getElementById("item-list-sentinel");
-  if (sentinel) sentinel.remove();
-
-  const batch = filteredItemCache.slice(
-    renderedItemCount,
-    renderedItemCount + ITEM_PAGE_SIZE,
-  );
-  const fragment = document.createDocumentFragment();
-
-  batch.forEach((item) => fragment.appendChild(createModalItemEl(item)));
-  itemList.appendChild(fragment);
-  renderedItemCount += batch.length;
-
-  if (renderedItemCount < filteredItemCache.length) {
-    setupScrollObserver();
-  }
-
-  isLoadingMore = false;
-}
-
-function createModalItemEl(item) {
-  const div = document.createElement("div");
-  div.className = "modal-item";
-  let tempItem = { ...item, shg: currentSHG || null };
-  let val = FTFData.calculateItemValue(tempItem);
-  let displayVal = formatNumberForDisplay(val);
-
-  div.innerHTML = `
-            <div class="modal-item-img">
-                <img src="items/${encodeURIComponent(item.name)}.webp"
-                     loading="lazy"
-                     onerror="this.src='items/Default.webp'"
-                     alt="${item.name}">
-            </div>
-            <div class="modal-item-info">
-                <div class="modal-item-name">${item.name}</div>
-                <div class="modal-item-value">${displayVal}</div>
-            </div>`;
-
-  div.onclick = () => {
-    const stabilityType = FTFData.parseStabilityType(item.stability);
-    activeArray.push({
-      ...item,
-      baseValue: item.value,
-      quantity: 1,
-      stabilityType: stabilityType,
-      shg: currentSHG || null,
-    });
-    if (modal) modal.style.display = "none";
-    setTimeout(() => updateAll(), 0);
-  };
-  return div;
-}
+// createModalItemEl deleted
 
 function openModal(targetArray) {
   if (targetArray.length >= MAX_SLOTS) {
     alert(`All ${MAX_SLOTS} slots are full! Remove an item first.`);
     return;
   }
-
   activeArray = targetArray;
-  currentRarity = "all";
-  currentSHG = null;
-  if (searchInput) searchInput.value = "";
-
-  if (raritySidebar) {
-    const activeBtn = raritySidebar.querySelector(".rarity-filter-btn.active");
-    if (activeBtn) activeBtn.classList.remove("active");
-    const allBtn = raritySidebar.querySelector(
-      '.rarity-filter-btn[data-rarity="all"]',
-    );
-    if (allBtn) allBtn.classList.add("active");
-    const activeShgBtn = raritySidebar.querySelector(".shg-btn.active");
-    if (activeShgBtn) activeShgBtn.classList.remove("active");
-  }
-
-  if (modal) modal.style.display = "flex";
-
-  setTimeout(() => updateDisplayedItems(), 0);
-
-  if (searchInput && window.innerWidth > 768) {
-    setTimeout(() => searchInput.focus(), 100);
-  }
+  if (modalController) modalController.open();
 }
 
-function updateDisplayedItems() {
-  if (!itemList || !searchInput) return;
-
-  if (itemListObserver) {
-    itemListObserver.disconnect();
-    itemListObserver = null;
-  }
-
-  itemList.innerHTML = "";
-  renderedItemCount = 0;
-  isLoadingMore = false;
-
-  if (window.itemLoadError || allItems.length === 0) {
-    itemList.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: #999;">No items found</div>`;
-    return;
-  }
-
-  const query = searchInput.value.toLowerCase();
-  let filtered = allItems;
-  if (currentRarity !== "all")
-    filtered = filtered.filter((i) => i.rarity.toLowerCase() === currentRarity);
-  if (query)
-    filtered = filtered.filter((i) => i.name.toLowerCase().includes(query));
-
-  const fragment = document.createDocumentFragment();
-
-  const showAdds = !query || "adds".toLowerCase().includes(query);
-  if (showAdds) {
-    const div = document.createElement("div");
-    div.className = "modal-item";
-    div.innerHTML = `
-                <div class="modal-item-img" style="display: flex; align-items: center; justify-content: center; background: transparent;">
-                    <svg viewBox="0 0 24 24" style="width: 80%; height: 80%;" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                </div>
-                <div class="modal-item-info">
-                    <div class="modal-item-name">Adds</div>
-                    <div class="modal-item-value">&nbsp;</div>
-                </div>`;
-
-    div.onclick = () => {
-      activeArray.push({
-        name: "Adds",
-        baseValue: 0,
-        quantity: 0,
-        rarity: "special",
-        stability: null,
-        stabilityType: null,
-        shg: null,
-        isAdds: true,
-      });
-      if (modal) modal.style.display = "none";
-      setTimeout(() => updateAll(), 0);
-    };
-    fragment.appendChild(div);
-  }
-
-  if (filtered.length === 0) {
-    itemList.appendChild(fragment);
-    if (!showAdds) {
-      const msg = document.createElement("p");
-      msg.style.cssText =
-        "color:#999;text-align:center;padding:2rem;grid-column:1/-1;";
-      msg.textContent = "No items found";
-      itemList.appendChild(msg);
-    }
-    return;
-  }
-
-  filtered = FTFModalSort.sortItems(
-    filtered,
-    modalSortController?.getSort() ?? "rarity",
-    modalSortController?.getReverse() ?? false,
-    currentSHG
-  );
-
-  filteredItemCache = filtered;
-
-  const firstBatch = filteredItemCache.slice(0, ITEM_PAGE_SIZE);
-  firstBatch.forEach((item) => fragment.appendChild(createModalItemEl(item)));
-  renderedItemCount = firstBatch.length;
-
-  itemList.appendChild(fragment);
-
-  if (renderedItemCount < filteredItemCache.length) {
-    setupScrollObserver();
-  }
-}
-
-function closeModalHandler() {
-  if (modal) modal.style.display = "none";
-  if (searchDebounceTimer) {
-    clearTimeout(searchDebounceTimer);
-    searchDebounceTimer = null;
-  }
-  if (itemListObserver) {
-    itemListObserver.disconnect();
-    itemListObserver = null;
-  }
-}
+// Modal controller replaces updateDisplayedItems, closeModalHandler, and scroll observer logic
 
 function saveTradeToLocalStorage() {
   try {
@@ -614,6 +411,60 @@ async function init() {
   try {
     await FTFData.init();
     allItems = FTFData.allItems;
+
+    modalController = new FTFModalController({
+      allItems: allItems,
+      sortController: modalSortController,
+      showAddsItem: true,
+      onAddsClick: () => {
+        activeArray.push({
+          name: "Adds",
+          baseValue: 0,
+          quantity: 0,
+          rarity: "special",
+          stability: null,
+          stabilityType: null,
+          shg: null,
+          isAdds: true,
+        });
+        modalController.close();
+        setTimeout(() => updateAll(), 0);
+      },
+      renderItem: (item, currentSHG) => {
+        const div = document.createElement("div");
+        div.className = "modal-item";
+        let tempItem = { ...item, shg: currentSHG || null };
+        let val = FTFData.calculateItemValue(tempItem);
+        let displayVal = formatNumberForDisplay(val);
+    
+        div.innerHTML = `
+            <div class="modal-item-img">
+                <img src="items/${encodeURIComponent(item.name)}.webp"
+                     loading="lazy"
+                     onerror="this.src='items/Default.webp'"
+                     alt="${item.name}">
+            </div>
+            <div class="modal-item-info">
+                <div class="modal-item-name">${item.name}</div>
+                <div class="modal-item-value">${displayVal}</div>
+            </div>`;
+    
+        div.onclick = () => {
+          const stabilityType = FTFData.parseStabilityType(item.stability);
+          activeArray.push({
+            ...item,
+            baseValue: item.value,
+            quantity: 1,
+            stabilityType: stabilityType,
+            shg: currentSHG || null,
+          });
+          modalController.close();
+          setTimeout(() => updateAll(), 0);
+        };
+        return div;
+      }
+    });
+
     hydrateTradesFromRaw();
     updateAll();
   } catch (e) {
@@ -638,8 +489,8 @@ function renderFvHvSwitch() {
     toggle.querySelector(".fv-hv-toggle").classList.toggle("hv", modeHV);
     toggle.querySelector(".knob").textContent = modeHV ? "hv" : "fv";
     updateAll();
-    if (modal && modal.style.display === "flex") {
-      updateDisplayedItems();
+    if (modalController && modal && modal.style.display === "flex") {
+      modalController.updateDisplayedItems();
     }
   };
 
@@ -651,28 +502,19 @@ function renderFvHvSwitch() {
   tradeLayout.appendChild(infoDiv);
 }
 
-if (closeModalBtn) closeModalBtn.onclick = closeModalHandler;
+// Event listeners moved to FTFModalController
 
-if (modal) {
-  modal.onclick = (e) => {
-    if (e.target === modal) closeModalHandler();
-  };
-}
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && modal && modal.style.display === "flex") {
-    closeModalHandler();
-  }
+modalSortController = FTFModalSort.setup({
+  dropdown: modalSortDropdown,
+  label: modalSortLabel,
+  menu: modalSortMenu,
+  reverseBtn: modalSortReversBtn,
+  defaultSort: "rarity",
+  storageKey: "ftf-modal-sort",
+  onChange: () => {
+    if (modalController) modalController.updateDisplayedItems();
+  },
 });
-
-if (searchInput) {
-  searchInput.oninput = () => {
-    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-    searchDebounceTimer = setTimeout(() => {
-      updateDisplayedItems();
-    }, 150);
-  };
-}
 
 if (resetBtn) {
   resetBtn.onclick = () => {
@@ -685,47 +527,36 @@ if (resetBtn) {
   };
 }
 
-if (raritySidebar) {
-  raritySidebar.onclick = (e) => {
-    if (e.target.classList.contains("rarity-filter-btn")) {
-      const activeBtn = raritySidebar.querySelector(
-        ".rarity-filter-btn.active",
-      );
-      if (activeBtn) activeBtn.classList.remove("active");
-      e.target.classList.add("active");
-      currentRarity = e.target.dataset.rarity;
-
-      setTimeout(() => updateDisplayedItems(), 0);
-    }
-
-    const shgBtn = e.target.closest(".shg-btn");
-    if (shgBtn) {
-      const val = shgBtn.dataset.shg;
-      const activeShgBtn = raritySidebar.querySelector(".shg-btn.active");
-
-      if (currentSHG === val) {
-        currentSHG = null;
-        if (activeShgBtn) activeShgBtn.classList.remove("active");
-      } else {
-        if (activeShgBtn) activeShgBtn.classList.remove("active");
-        currentSHG = val;
-        shgBtn.classList.add("active");
-      }
-
-      setTimeout(() => updateDisplayedItems(), 0);
-      updateAll();
-    }
-  };
-}
-
-modalSortController = FTFModalSort.setup({
-  dropdown: modalSortDropdown,
-  label: modalSortLabel,
-  menu: modalSortMenu,
-  reverseBtn: modalSortReversBtn,
-  defaultSort: "rarity",
-  storageKey: "ftf-modal-sort",
-  onChange: () => updateDisplayedItems(),
-});
-
 init();
+
+// --- SAVE AS IMAGE ---
+
+const saveTradeBtn = document.getElementById("save-trade-btn");
+if (saveTradeBtn) {
+  let saveTradeLastClick = 0;
+  saveTradeBtn.addEventListener("click", async () => {
+    const now = Date.now();
+    if (now - saveTradeLastClick < 3000) return;
+    
+    const yourItems = yourTrade.slice();
+    const theirItems = theirTrade.slice();
+    if (yourItems.length === 0 && theirItems.length === 0) return;
+    
+    saveTradeLastClick = now;
+
+    saveTradeBtn.disabled = true;
+    saveTradeBtn.textContent = "Saving...";
+
+    try {
+      const { exportTradeImage } = await import('./canvas.js');
+      await exportTradeImage(yourItems, theirItems, LAST_UPDATED);
+    } catch (e) {
+      console.error("Failed to load or export image:", e);
+      saveTradeBtn.textContent = "Error";
+      setTimeout(() => {
+        saveTradeBtn.textContent = "Save Ad";
+        saveTradeBtn.disabled = false;
+      }, 3000);
+    }
+  });
+}

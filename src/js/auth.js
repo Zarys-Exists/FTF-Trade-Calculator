@@ -216,6 +216,10 @@ export const FTFAuth = {
 
     clearTimeout(cloudSaveTimer);
     cloudSaveTimer = setTimeout(async () => {
+      if (!navigator.onLine) {
+        this._setSyncStatus("error");
+        return;
+      }
       this._setSyncStatus("saving");
       try {
         const items = [];
@@ -267,6 +271,11 @@ export const FTFAuth = {
     if (!databases || !this.user || !this.profile) return null;
     if (Object.keys(this.itemNameMap).length === 0) this.buildItemMaps();
 
+    if (!navigator.onLine) {
+      this._setSyncStatus("error");
+      return null;
+    }
+
     try {
       let doc;
       try {
@@ -277,11 +286,14 @@ export const FTFAuth = {
             user_id: this.user.$id,
             items: [],
           });
+          this._setSyncStatus("synced");
           return [];
         }
+        this._setSyncStatus("error");
         throw e;
       }
 
+      this._setSyncStatus("synced");
       const rawItems = doc.items || [];
       if (rawItems.length === 0) return [];
 
@@ -356,12 +368,6 @@ export const FTFAuth = {
       case "synced":
         el.textContent = "Synced ✓";
         el.classList.add("sync-done");
-        setTimeout(() => {
-          if (el.classList.contains("sync-done")) {
-            el.textContent = "";
-            el.className = "sync-status";
-          }
-        }, 3000);
         break;
       case "error":
         el.textContent = "Sync failed";
