@@ -1,6 +1,17 @@
 import { FTFData } from "./utils.js";
 
-// === SHARED CANVAS UTILS ===
+let currentModeHV = false;
+const HV_DIVISOR = 30;
+
+function formatCanvasValue(val) {
+  if (currentModeHV) {
+    const num = val / HV_DIVISOR;
+    return num.toFixed(3).replace(/\.?0+$/, "");
+  }
+  return FTFData.formatFV(val);
+}
+
+
 
 export function hexToRgb(hex) {
   const h = hex.replace("#", "");
@@ -191,18 +202,19 @@ export function drawItemCell(ctx, x, y, w, h, item, img, isTrade = false) {
   }
 
   if (!isTrade) {
-    const formattedVal = FTFData.formatFV(
+    const formattedVal = formatCanvasValue(
       FTFData.calculateItemValue(item) * (item.quantity || 1),
     );
+    const modeLabel = currentModeHV ? "hv" : "fv";
     ctx.font = "11px Arial, sans-serif";
     ctx.fillStyle = "#c8b4f0";
     ctx.globalAlpha = 1;
-    ctx.fillText(`${formattedVal} fv`, x + w / 2, nameY + 16);
+    ctx.fillText(`${formattedVal} ${modeLabel}`, x + w / 2, nameY + 16);
     ctx.globalAlpha = 1;
   }
 }
 
-// === TRADE CANVAS EXPORT ===
+
 
 const TSS = {
   CELL_W: 90,
@@ -223,22 +235,22 @@ const TSS = {
 function tssDrawCard(ctx, cardX, cardY, cardW, cardH, label, items, totalValue, cols) {
   const { PANEL_PAD, LABEL_H, LABEL_GAP, CELL_W, CELL_H, CELL_GAP } = TSS;
 
-  // Card background
+  
   ctx.fillStyle = "rgba(255,255,255,0.028)";
   rrect(ctx, cardX, cardY, cardW, cardH, 11);
   ctx.fill();
 
-  // Card border
+  
   ctx.strokeStyle = "rgba(124,58,237,0.28)";
   ctx.lineWidth = 1;
   rrect(ctx, cardX, cardY, cardW, cardH, 11);
   ctx.stroke();
 
-  // Label and Value
+  
   const labelY = cardY + PANEL_PAD;
   const textY = labelY + LABEL_H / 2;
 
-  const valText = FTFData.formatFV(totalValue);
+  const valText = formatCanvasValue(totalValue);
   const lblText = label.toUpperCase() + ": ";
 
   ctx.font = "bold 12px Arial, sans-serif";
@@ -260,7 +272,7 @@ function tssDrawCard(ctx, cardX, cardY, cardW, cardH, label, items, totalValue, 
   ctx.fillStyle = "#ffffff";
   ctx.fillText(valText, startX + lblWidth, textY);
 
-  // Divider below label
+  
   const divY1 = labelY + LABEL_H + 4;
   ctx.strokeStyle = "rgba(124,58,237,0.2)";
   ctx.lineWidth = 1;
@@ -269,7 +281,7 @@ function tssDrawCard(ctx, cardX, cardY, cardW, cardH, label, items, totalValue, 
   ctx.lineTo(cardX + cardW - PANEL_PAD, divY1);
   ctx.stroke();
 
-  // Items grid centred inside card
+  
   const gridTop = divY1 + LABEL_GAP;
   const gridW = cols * CELL_W + (cols - 1) * CELL_GAP;
   const gridLeft = cardX + (cardW - gridW) / 2;
@@ -289,7 +301,8 @@ function tssDrawCard(ctx, cardX, cardY, cardW, cardH, label, items, totalValue, 
   });
 }
 
-export async function exportTradeImage(yourTrade, theirTrade, LAST_UPDATED) {
+export async function exportTradeImage(yourTrade, theirTrade, LAST_UPDATED, modeHV = false) {
+  currentModeHV = modeHV;
   const btn = document.getElementById("save-trade-btn");
   if (btn) {
     btn.disabled = true;
@@ -338,32 +351,32 @@ export async function exportTradeImage(yourTrade, theirTrade, LAST_UPDATED) {
   );
   allItems.forEach(function (item) { item._canvasImg = imgCache.get(item.name) || null; });
 
-  // Build canvas
+  
   const canvas = document.createElement("canvas");
   canvas.width = canvasW;
   canvas.height = canvasH;
   const ctx = canvas.getContext("2d");
 
-  // Background
+  
   const bg = ctx.createLinearGradient(0, 0, 0, canvasH);
   bg.addColorStop(0, "#130826");
   bg.addColorStop(1, "#08010f");
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, canvasW, canvasH);
 
-  // Dot texture
+  
   ctx.fillStyle = "rgba(255,255,255,0.016)";
   for (let gx = OUTER_PAD; gx < canvasW - OUTER_PAD; gx += 20)
     for (let gy = OUTER_PAD; gy < canvasH - FOOTER_H; gy += 20)
       ctx.fillRect(gx, gy, 1, 1);
 
-  // Positions
+  
   const cardY = OUTER_PAD;
   const leftCardX = OUTER_PAD;
   const midX = OUTER_PAD + cardW + MID_GAP;
   const rightCardX = midX + MID_W + MID_GAP;
 
-  // Totals
+  
   const yourTotal = yourItems.reduce(function (s, i) {
     if (i.isAdds) return s + (i.quantity || 0);
     return s + FTFData.calculateItemValue(i) * (i.quantity || 1);
@@ -374,11 +387,11 @@ export async function exportTradeImage(yourTrade, theirTrade, LAST_UPDATED) {
     return s + FTFData.calculateItemValue(i) * (i.quantity || 1);
   }, 0);
 
-  // Draw cards
+  
   tssDrawCard(ctx, leftCardX, cardY, cardW, cardH, "Offering", yourItems, yourTotal, COLS);
   tssDrawCard(ctx, rightCardX, cardY, cardW, cardH, "Requesting", theirItems, theirTotal, COLS);
 
-  // Centre result (opponent's POV: you offer more = they Win)
+  
   const opponentDiff = yourTotal - theirTotal;
   const absDiff = Math.abs(opponentDiff);
 
@@ -388,9 +401,9 @@ export async function exportTradeImage(yourTrade, theirTrade, LAST_UPDATED) {
   } else if (absDiff < 0.01) {
     resultTop = "Fair"; resultSub = null; resultColor = "#ffffff";
   } else if (opponentDiff > 0) {
-    resultTop = FTFData.formatFV(absDiff); resultSub = "Win"; resultColor = "#00eb37";
+    resultTop = formatCanvasValue(absDiff); resultSub = "Win"; resultColor = "#00eb37";
   } else {
-    resultTop = FTFData.formatFV(absDiff); resultSub = "Loss"; resultColor = "#e00016";
+    resultTop = formatCanvasValue(absDiff); resultSub = "Loss"; resultColor = "#e00016";
   }
 
   const midCX = midX + MID_W / 2;
@@ -420,7 +433,7 @@ export async function exportTradeImage(yourTrade, theirTrade, LAST_UPDATED) {
     ctx.fillText(resultTop, midCX, midCY);
   }
 
-  // Footer watermark
+  
   const footerY = canvasH - FOOTER_H;
   const fLine = ctx.createLinearGradient(0, 0, canvasW, 0);
   fLine.addColorStop(0, "transparent");
@@ -442,7 +455,7 @@ export async function exportTradeImage(yourTrade, theirTrade, LAST_UPDATED) {
   ctx.textBaseline = "middle";
   ctx.fillText("FTF Calculator", canvasW / 2, footerY + FOOTER_H / 2);
 
-  // Download
+  
   try {
     const link = document.createElement("a");
     link.download = "ftf-trade.png";
@@ -455,13 +468,13 @@ export async function exportTradeImage(yourTrade, theirTrade, LAST_UPDATED) {
   if (btn) {
     btn.textContent = "Saved!";
     setTimeout(function () {
-      btn.textContent = "Save";
+      btn.textContent = "Save Ad";
       btn.disabled = false;
     }, 3000);
   }
 }
 
-// === INVENTORY CANVAS EXPORT ===
+
 
 const SS = {
   COLS: 8,
@@ -571,8 +584,9 @@ export async function exportInventoryImages(sortedInventory, sortLabel, IMG_BASE
       (s, i) => s + FTFData.calculateItemValue(i) * (i.quantity || 1),
       0,
     );
+    const modeLabel = currentModeHV ? "hv" : "fv";
     ctx.fillText(
-      `${totalQty} item${totalQty !== 1 ? "s" : ""} \u00B7 ${FTFData.formatFV(totalVal)} fv`,
+      `${totalQty} item${totalQty !== 1 ? "s" : ""} \u00B7 ${formatCanvasValue(totalVal)} ${modeLabel}`,
       SS.CANVAS_W - SS.H_PAD,
       SS.HEADER_H / 2 - 6,
     );

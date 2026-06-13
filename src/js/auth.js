@@ -1,4 +1,4 @@
-import { Client, Account, Databases, Query as AppwriteQuery } from "appwrite";
+import { Client, Account, Databases, ID, Query as AppwriteQuery } from "appwrite";
 import { FTFData } from "./utils.js";
 
 const APPWRITE_ENDPOINT = "https://nyc.cloud.appwrite.io/v1";
@@ -6,6 +6,7 @@ const APPWRITE_PROJECT_ID = "69fc78bc00097545b573";
 const DB_ID = "ftf_db";
 const COL_PROFILES = "profiles";
 const COL_INVENTORY = "user_inventory";
+const COL_SAVE_TRADE = "saved_trades";
 
 let cloudSaveTimer = null;
 
@@ -207,6 +208,39 @@ export const FTFAuth = {
       } catch (e) {
         console.warn("Could not sync Discord username:", e.message);
       }
+    }
+  },
+
+  async logTradeAnalytics(yourItems, theirItems) {
+    if (!databases) return;
+    if (Object.keys(this.itemIdMap).length === 0) this.buildItemMaps();
+
+    let deviceId = localStorage.getItem("ftf_device_id");
+    if (!deviceId) {
+      deviceId = "usr_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem("ftf_device_id", deviceId);
+    }
+
+    const formatItem = (item) => {
+      const itemId = item.id || this.itemIdMap[item.name] || item.name;
+      const qty = item.qty ?? item.quantity ?? 1;
+      const shg = (item.shg || "").trim();
+      return `${itemId}|${qty}|${shg}`;
+    };
+
+    try {
+      await databases.createDocument(
+        DB_ID,
+        COL_SAVE_TRADE,
+        ID.unique(),
+        {
+          offering: yourItems.slice(0, 60).map(formatItem),
+          requesting: theirItems.slice(0, 60).map(formatItem),
+          device_id: deviceId
+        }
+      );
+    } catch (e) {
+      console.warn("Could not log trade analytics:", e.message);
     }
   },
 

@@ -19,7 +19,7 @@ let invSearchDebounceTimer = null;
 let sortDescending = false;
 let modalController = null;
 let modalSortController = null;
-let filteredItemCache = []; // Keep around or let controller manage
+let filteredItemCache = []; 
 let _rawSavedInventory = null;
 
 const RARITY_ORDER = { Legendary: 0, Epic: 1, Rare: 2, Common: 3 };
@@ -670,7 +670,7 @@ function dismissWithoutAdding() {
   if (modalController) modalController.close();
 }
 
-// modal functions replaced by FTFModalController
+
 
 async function takeScreenshots() {
   if (inventory.length === 0) {
@@ -702,7 +702,7 @@ async function takeScreenshots() {
   }
 }
 
-// --- INIT ---
+
 let lastLoadedUserId = null;
 
 async function init() {
@@ -928,7 +928,7 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-// Event handlers for modal logic moved to FTFModalController
+
 
 invSearchEl?.addEventListener("input", () => {
   invSearchQuery = invSearchEl.value.trim();

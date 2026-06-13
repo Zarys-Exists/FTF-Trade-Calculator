@@ -20,7 +20,7 @@ let currentRarity = "all";
 let modalSortController = null;
 let _rawSavedTrade = null;
 
-let filteredItemCache = []; // Keeping this for reference if needed, but the controller handles it
+let filteredItemCache = []; 
 let modalController = null;
 
 const themeToggle = document.getElementById("theme-toggle");
@@ -64,7 +64,7 @@ function formatNumberForDisplay(n, isAdds = false) {
   return FTFData.formatFV(n);
 }
 
-// --- SMART RENDERING ---
+
 function renderGrid(gridElement, dataArray) {
   gridElement.innerHTML = "";
   for (let i = 0; i < MAX_SLOTS; i++) {
@@ -263,6 +263,10 @@ function updateAll() {
   renderGrid(theirGrid, theirTrade);
   updateTotalsOnly();
   saveTradeToLocalStorage();
+  const saveBtn = document.getElementById("save-trade-btn");
+  if (saveBtn) {
+    saveBtn.disabled = yourTrade.length === 0 && theirTrade.length === 0;
+  }
 }
 
 function updateWFL(yourTradeVal, theirTradeVal, yourAddsVal, theirAddsVal) {
@@ -318,9 +322,9 @@ function updateWFL(yourTradeVal, theirTradeVal, yourAddsVal, theirAddsVal) {
 let activeArray = null;
 let searchDebounceTimer = null;
 
-// loadNextBatch deleted
 
-// createModalItemEl deleted
+
+
 
 function openModal(targetArray) {
   if (targetArray.length >= MAX_SLOTS) {
@@ -331,7 +335,7 @@ function openModal(targetArray) {
   if (modalController) modalController.open();
 }
 
-// Modal controller replaces updateDisplayedItems, closeModalHandler, and scroll observer logic
+
 
 function saveTradeToLocalStorage() {
   try {
@@ -502,7 +506,7 @@ function renderFvHvSwitch() {
   tradeLayout.appendChild(infoDiv);
 }
 
-// Event listeners moved to FTFModalController
+
 
 modalSortController = FTFModalSort.setup({
   dropdown: modalSortDropdown,
@@ -529,7 +533,7 @@ if (resetBtn) {
 
 init();
 
-// --- SAVE AS IMAGE ---
+
 
 const saveTradeBtn = document.getElementById("save-trade-btn");
 if (saveTradeBtn) {
@@ -544,12 +548,15 @@ if (saveTradeBtn) {
     
     saveTradeLastClick = now;
 
+    // Fire and forget analytics logging
+    FTFAuth.logTradeAnalytics(yourItems, theirItems).catch(console.error);
+
     saveTradeBtn.disabled = true;
     saveTradeBtn.textContent = "Saving...";
 
     try {
       const { exportTradeImage } = await import('./canvas.js');
-      await exportTradeImage(yourItems, theirItems, LAST_UPDATED);
+      await exportTradeImage(yourItems, theirItems, LAST_UPDATED, modeHV);
     } catch (e) {
       console.error("Failed to load or export image:", e);
       saveTradeBtn.textContent = "Error";
