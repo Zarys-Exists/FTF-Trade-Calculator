@@ -3,6 +3,7 @@ import { resolve } from 'path';
 
 export default defineConfig(({ mode }) => ({
   root: 'src',
+  envPrefix: ['VITE_', 'APPWRITE_'],
   publicDir: '../public',
   // 'dev' uses development mode, 'build' and 'preview' use production
   base: mode === 'development' ? '/' : '/FTF-Trade-Calculator/',

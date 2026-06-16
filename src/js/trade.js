@@ -22,6 +22,7 @@ let _rawSavedTrade = null;
 
 let filteredItemCache = []; 
 let modalController = null;
+let saveTradeLastClick = 0;
 
 const themeToggle = document.getElementById("theme-toggle");
 const htmlElement = document.documentElement;
@@ -265,7 +266,9 @@ function updateAll() {
   saveTradeToLocalStorage();
   const saveBtn = document.getElementById("save-trade-btn");
   if (saveBtn) {
-    saveBtn.disabled = yourTrade.length === 0 && theirTrade.length === 0;
+    if (Date.now() - saveTradeLastClick >= 3000) {
+      saveBtn.disabled = yourTrade.length === 0 && theirTrade.length === 0;
+    }
   }
 }
 
@@ -537,7 +540,6 @@ init();
 
 const saveTradeBtn = document.getElementById("save-trade-btn");
 if (saveTradeBtn) {
-  let saveTradeLastClick = 0;
   saveTradeBtn.addEventListener("click", async () => {
     const now = Date.now();
     if (now - saveTradeLastClick < 3000) return;
@@ -557,6 +559,13 @@ if (saveTradeBtn) {
     try {
       const { exportTradeImage } = await import('./canvas.js');
       await exportTradeImage(yourItems, theirItems, LAST_UPDATED, modeHV);
+      
+      const elapsed = Date.now() - saveTradeLastClick;
+      const remaining = Math.max(0, 3000 - elapsed);
+      setTimeout(() => {
+        saveTradeBtn.textContent = "Save Ad";
+        saveTradeBtn.disabled = false;
+      }, remaining);
     } catch (e) {
       console.error("Failed to load or export image:", e);
       saveTradeBtn.textContent = "Error";

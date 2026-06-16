@@ -214,10 +214,15 @@ export const FTFAuth = {
     if (!databases) return;
     if (Object.keys(this.itemIdMap).length === 0) this.buildItemMaps();
 
-    let deviceId = localStorage.getItem("ftf_device_id");
-    if (!deviceId) {
-      deviceId = "usr_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-      localStorage.setItem("ftf_device_id", deviceId);
+    let deviceId;
+    try {
+      deviceId = localStorage.getItem("ftf_device_id");
+      if (!deviceId) {
+        deviceId = "usr_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem("ftf_device_id", deviceId);
+      }
+    } catch (err) {
+      deviceId = "usr_anon_" + Math.random().toString(36).substring(2, 15);
     }
 
     const formatItem = (item) => {
