@@ -4,7 +4,7 @@ import "./nav.js";
 
 FTFAuth.init();
 
-const LAST_UPDATED = "11 June";
+const LAST_UPDATED = "15 June";
 const HV_DIVISOR = 30;
 const MAX_SLOTS = 27;
 const MAX_QUANTITY = 100;
@@ -550,7 +550,6 @@ if (saveTradeBtn) {
     
     saveTradeLastClick = now;
 
-    // Fire and forget analytics logging
     FTFAuth.logTradeAnalytics(yourItems, theirItems).catch(console.error);
 
     saveTradeBtn.disabled = true;

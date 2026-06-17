@@ -232,6 +232,12 @@ export const FTFAuth = {
       return `${itemId}|${qty}|${shg}`;
     };
 
+    const getRawId = (item) => {
+      let id = item.id || this.itemIdMap[item.name] || item.name;
+      if (id.toLowerCase() === "adds") return "adds";
+      return id;
+    };
+
     try {
       await databases.createDocument(
         DB_ID,
@@ -240,11 +246,13 @@ export const FTFAuth = {
         {
           offering: yourItems.slice(0, 60).map(formatItem),
           requesting: theirItems.slice(0, 60).map(formatItem),
+          search_offer_ids: yourItems.slice(0, 60).map(getRawId).join(" "),
+          search_req_ids: theirItems.slice(0, 60).map(getRawId).join(" "),
+          search_all_ids: [...yourItems, ...theirItems].slice(0, 120).map(getRawId).join(" "),
           device_id: deviceId
         }
       );
     } catch (e) {
-      console.warn("Could not log trade analytics:", e.message);
     }
   },
 
