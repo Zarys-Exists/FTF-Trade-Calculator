@@ -400,7 +400,7 @@ export async function exportTradeImage(yourTrade, theirTrade, LAST_UPDATED, mode
     resultTop = "--"; resultSub = null; resultColor = "#888888";
   } else if (absDiff < 0.01) {
     resultTop = "Fair"; resultSub = null; resultColor = "#ffffff";
-  } else if (opponentDiff > 0) {
+  } else if (opponentDiff < 0) {
     resultTop = formatCanvasValue(absDiff); resultSub = "Win"; resultColor = "#00eb37";
   } else {
     resultTop = formatCanvasValue(absDiff); resultSub = "Loss"; resultColor = "#e00016";
@@ -468,7 +468,7 @@ export async function exportTradeImage(yourTrade, theirTrade, LAST_UPDATED, mode
   if (btn) {
     btn.textContent = "Saved!";
     setTimeout(function () {
-      btn.textContent = "Save Ad";
+      btn.textContent = "Save Image";
       btn.disabled = false;
     }, 3000);
   }

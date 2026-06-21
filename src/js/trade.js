@@ -562,14 +562,14 @@ if (saveTradeBtn) {
       const elapsed = Date.now() - saveTradeLastClick;
       const remaining = Math.max(0, 3000 - elapsed);
       setTimeout(() => {
-        saveTradeBtn.textContent = "Save Ad";
+        saveTradeBtn.textContent = "Save Image";
         saveTradeBtn.disabled = false;
       }, remaining);
     } catch (e) {
       console.error("Failed to load or export image:", e);
       saveTradeBtn.textContent = "Error";
       setTimeout(() => {
-        saveTradeBtn.textContent = "Save Ad";
+        saveTradeBtn.textContent = "Save Image";
         saveTradeBtn.disabled = false;
       }, 3000);
     }
