@@ -18,7 +18,7 @@ a {
   --bg-lighter: rgba(0, 0, 0, 0.3);
   --bg-hover: rgba(255, 255, 255, 0.1);
 
-  --color-primary: #8a2be2;
+  --color-primary: #982aff;
   --color-secondary: #6400c1;
   --color-accent: #6a1ee0;
   --color-text: #ffffff;
@@ -55,6 +55,8 @@ a {
   --scrollbar-thumb: var(--color-accent);
 
   --color-light-purple: #e0b0ff;
+  --panel-bg: rgba(0, 0, 0, 0.26);
+  --panel-border: rgba(152, 42, 255, 0.45);
 }
 
 html.dark-theme {
@@ -88,6 +90,8 @@ html.dark-theme {
   --scrollbar-bg: #0b0b0b;
   --scrollbar-thumb: var(--color-primary);
   --stability-label-stable: #3e3e3e;
+  --panel-bg: var(--bg-light);
+  --panel-border: var(--border-color);
 }
 
 html {
@@ -442,7 +446,6 @@ body.drawer-open {
   height: 1rem;
   background-color: var(--bg-light);
   border-radius: 0.5rem;
-  border: 1px solid var(--border-color);
   position: relative;
   overflow: hidden;
 }
@@ -622,7 +625,7 @@ body.drawer-open {
 }
 
 .item-slot.filled {
-  border: 1px solid var(--color-primary);
+  border: 1px solid transparent;
   font-weight: 500;
 }
 
@@ -816,7 +819,6 @@ body.drawer-open {
   top: 0;
   left: 0;
   transition: left 0.18s cubic-bezier(0.2, 0.9, 0.2, 1);
-  box-shadow: 0 4px 12px var(--knob-shadow);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -484,8 +484,8 @@ function renderFvHvSwitch() {
   const toggle = document.createElement("div");
   toggle.className = "fv-hv-switch";
   toggle.innerHTML = `
-            <div class="label">Mode</div>
-            <div class="fv-hv-toggle" id="fv-hv-toggle" title="Toggle between Flee Value (FV) and Hunter Value (HV) modes">
+            <div class="label">Unit</div>
+            <div class="fv-hv-toggle" id="fv-hv-toggle" title="Toggle between Flee Value (FV) and Hunter Value (HV) units">
                 <div class="option">fv</div><div class="option">hv</div>
                 <div class="knob">fv</div>
             </div>`;

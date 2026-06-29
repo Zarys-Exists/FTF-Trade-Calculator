@@ -53,7 +53,7 @@ export const SHARED_COLORS = {
     legendary: "#f59e0b",
     epic: "#a855f7",
     rare: "#3b82f6",
-    common: "#6b7280",
+    common: "#22c55e",
   },
   STABILITY: {
     rising: "#34d399",
@@ -102,7 +102,7 @@ export function drawItemCell(ctx, x, y, w, h, item, img, isTrade = false) {
 
   if (!isTrade) {
     ctx.restore();
-    const rColor = SHARED_COLORS.RARITY[rarity] || "#6b7280";
+    const rColor = SHARED_COLORS.RARITY[rarity] || "#22c55e";
     ctx.fillStyle = rColor;
     ctx.globalAlpha = 0.75;
     rrectTop(ctx, x, y, w, 3, rad);
