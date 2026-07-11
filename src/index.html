@@ -60,6 +60,16 @@
       if (localStorage.getItem("theme") !== "light") {
         document.documentElement.classList.add("dark-theme");
       }
+      if (localStorage.getItem("gridLayout") === "2x2") {
+        document.documentElement.classList.add("grid-2x2");
+      }
+      if (localStorage.getItem("hideItemInfo") === "true") {
+        document.documentElement.classList.add("hide-item-info");
+      }
+      // closeImmediately defaults to true — only add class when explicitly disabled
+      if (localStorage.getItem("closeImmediately") === "false") {
+        document.documentElement.classList.add("multi-pick-mode");
+      }
     </script>
   </head>
   <body>
@@ -196,9 +206,73 @@
             <div id="item-list" class="item-list"></div>
           </div>
         </div>
+        <div class="trade-modal-footer" id="trade-modal-footer">
+          <button id="trade-modal-cancel" class="trade-modal-cancel-btn">Cancel</button>
+          <button id="trade-modal-done" class="trade-modal-done-btn" style="display:none">Add Items</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="trade-confirm-dialog" class="confirm-overlay">
+      <div class="confirm-card">
+        <div class="confirm-icon" id="trade-confirm-icon" style="display:none"></div>
+        <div class="confirm-title" id="trade-confirm-title">Are you sure?</div>
+        <div class="confirm-msg" id="trade-confirm-msg"></div>
+        <div class="confirm-actions" id="trade-confirm-actions"></div>
+      </div>
+    </div>
+
+    <div id="settings-modal" class="modal-overlay">
+      <div class="modal-content settings-modal-content">
+        <span class="close-modal" id="settings-close-btn">&times;</span>
+        <h3>Settings</h3>
+        <div class="modal-body settings-modal-body">
+          <div class="settings-group">
+            <div class="setting-row">
+              <span class="setting-row-label">Use 2x2 grid</span>
+              <button
+                type="button"
+                class="toggle-switch"
+                id="grid-2x2-toggle"
+                role="switch"
+                aria-checked="false"
+                aria-label="Use 2x2 grid"
+              >
+                <span class="toggle-switch-knob"></span>
+              </button>
+            </div>
+            <div class="setting-row">
+              <span class="setting-row-label">Hide item details while choosing</span>
+              <button
+                type="button"
+                class="toggle-switch"
+                id="hide-item-info-toggle"
+                role="switch"
+                aria-checked="false"
+                aria-label="Hide item details while choosing"
+              >
+                <span class="toggle-switch-knob"></span>
+              </button>
+            </div>
+            <div class="setting-row">
+              <span class="setting-row-label">Close item modal immediately after selecting an item</span>
+              <button
+                type="button"
+                class="toggle-switch"
+                id="close-immediately-toggle"
+                role="switch"
+                aria-checked="true"
+                aria-label="Close item modal immediately after selecting an item"
+              >
+                <span class="toggle-switch-knob"></span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <script type="module" src="js/trade.js"></script>
+    <script type="module" src="js/settings.js"></script>
   </body>
 </html>

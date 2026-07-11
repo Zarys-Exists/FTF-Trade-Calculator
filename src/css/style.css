@@ -2,6 +2,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button,
@@ -12,33 +13,34 @@ a {
 }
 
 :root {
+  color-scheme: dark;
   --bg-gradient: linear-gradient(135deg, #27004a 0%, #1a0033 100%);
-  --bg-container: linear-gradient(160deg, #400078 0%, #2d0054 100%);
-  --bg-light: rgba(0, 0, 0, 0.2);
+  --bg-container: linear-gradient(160deg, #3c0071 0%, #2a004e 100%);
+  --bg-light: rgba(0, 0, 0, 0.24);
   --bg-lighter: rgba(0, 0, 0, 0.3);
   --bg-hover: rgba(255, 255, 255, 0.1);
 
-  --color-primary: #982aff;
-  --color-secondary: #6400c1;
-  --color-accent: #6a1ee0;
+  --color-primary: #7044d6;
+  --color-secondary: #4b2996;
+  --color-accent: #7044d6;
   --color-text: #ffffff;
   --color-text-secondary: #ccc;
 
   --border-color: var(--color-secondary);
   --button-bg: var(--color-accent);
-  --button-hover: #5400b5;
-  --button-active: #431686;
+  --button-hover: #845ae6;
+  --button-active: #9a75fa;
 
-  --rarity-hover: var(--button-active);
-  --rarity-active: hsl(267, 100%, 50%);
-  --shg-hover: var(--button-active);
-  --shg-active: hsl(267, 100%, 50%);
-  --item-hover: hsl(276, 100%, 44%);
+  --rarity-hover: var(--button-hover);
+  --rarity-active: #7044d6;
+  --shg-hover: var(--button-hover);
+  --shg-active: #7044d6;
+  --item-hover: #7044d6;
   --focus-shadow: rgba(138, 43, 226, 0.25);
   --knob-shadow: rgba(106, 30, 224, 0.25);
 
   --modal-overlay: rgba(0, 0, 0, 0.7);
-  --search-focus-border: #a855f7;
+  --search-focus-border: var(--color-primary);
 
   --header-height: 3.5rem;
 
@@ -54,15 +56,17 @@ a {
   --scrollbar-bg: #2d0054;
   --scrollbar-thumb: var(--color-accent);
 
-  --color-light-purple: #e0b0ff;
+  --color-light-purple: #d9c2ff;
   --panel-bg: rgba(0, 0, 0, 0.26);
   --panel-border: rgba(152, 42, 255, 0.45);
+  --modal-btn-border: rgba(0, 0, 0, 0.4);
 }
 
 html.dark-theme {
+  color-scheme: dark;
   --bg-gradient: linear-gradient(135deg, #0a0a0a 0%, #141414 100%);
-  --bg-container: linear-gradient(160deg, #1a1a1a 0%, #0d0d0d 100%);
-  --bg-light: rgba(255, 255, 255, 0.05);
+  --bg-container: linear-gradient(160deg, #181818 0%, #0b0b0b 100%);
+  --bg-light: rgba(0, 0, 0, 0.3);
   --bg-lighter: rgba(0, 0, 0, 0.4);
   --bg-hover: rgba(255, 255, 255, 0.08);
 
@@ -77,10 +81,10 @@ html.dark-theme {
   --button-hover: #3a3a3a;
 
   --rarity-hover: #4a4a4a;
-  --rarity-active: #6b6b6b;
+  --rarity-active: #424242;
   --shg-hover: #4a4a4a;
-  --shg-active: #6b6b6b;
-  --item-hover: #606060;
+  --shg-active: #424242;
+  --item-hover: #3e3e3e;
   --focus-shadow: rgba(85, 85, 85, 0.25);
   --knob-shadow: rgba(42, 42, 42, 0.25);
 
@@ -90,15 +94,22 @@ html.dark-theme {
   --scrollbar-bg: #0b0b0b;
   --scrollbar-thumb: var(--color-primary);
   --stability-label-stable: #3e3e3e;
-  --panel-bg: var(--bg-light);
+  --panel-bg: rgba(0, 0, 0, 0.3);
   --panel-border: var(--border-color);
+  --modal-btn-border: rgba(0, 0, 0, 0.7);
 }
 
 html {
   overflow-x: hidden;
-  background: var(--bg-gradient);
-  background-attachment: fixed;
   font-size: clamp(12px, 2vw, 16px);
+  background: var(--bg-gradient);
+  background-size: 100% 100vh;
+  background-repeat: no-repeat;
+  background-color: #1a0033;
+}
+
+html.dark-theme {
+  background-color: #0a0a0a;
 }
 
 body {
@@ -127,9 +138,8 @@ body {
   height: var(--header-height);
   padding: 0 1.25rem;
   margin-bottom: 1rem;
-  border-bottom: 0.125rem solid var(--color-primary);
   display: grid;
-  grid-template-columns: var(--header-height) 1fr auto;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   position: relative;
 }
@@ -146,6 +156,18 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.site-logo {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 4px;
 }
 
 .header-right {
@@ -193,6 +215,7 @@ body {
   opacity: 0;
   transform: scale(0.6) rotate(90deg);
 }
+
 .theme-toggle-icon .icon-moon {
   opacity: 1;
   transform: scale(1) rotate(0deg);
@@ -202,6 +225,7 @@ body {
   opacity: 1;
   transform: scale(1) rotate(0deg);
 }
+
 .theme-toggle-icon.is-dark .icon-moon {
   opacity: 0;
   transform: scale(0.6) rotate(-90deg);
@@ -246,10 +270,12 @@ body {
 .hamburger-btn.is-open span:nth-child(1) {
   transform: translateY(7px) rotate(45deg);
 }
+
 .hamburger-btn.is-open span:nth-child(2) {
   opacity: 0;
   width: 0;
 }
+
 .hamburger-btn.is-open span:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
 }
@@ -499,9 +525,8 @@ body.drawer-open {
   min-width: 8rem;
   max-width: 20rem;
   aspect-ratio: 1 / 1;
-  background-color: var(--bg-light);
+  background-color: transparent;
   border-radius: 0.25rem;
-  border: 2px solid var(--border-color);
   margin-top: 1rem;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -601,27 +626,35 @@ body.drawer-open {
 .item-slot.filled[data-stability="rising"] {
   border-color: var(--stability-label-rising);
 }
+
 .item-slot.filled[data-stability="improving"] {
   border-color: var(--stability-label-improving);
 }
+
 .item-slot.filled[data-stability="doing-well"] {
   border-color: var(--stability-label-doing-well);
 }
+
 .item-slot.filled[data-stability="fluctuating"] {
   border-color: var(--stability-label-fluctuating);
 }
+
 .item-slot.filled[data-stability="struggling"] {
   border-color: var(--stability-label-struggling);
 }
+
 .item-slot.filled[data-stability="receding"] {
   border-color: var(--stability-label-receding);
 }
+
 .item-slot.filled[data-stability="dropping"] {
   border-color: var(--stability-label-dropping);
 }
 
-.item-slot:hover {
-  background-color: var(--bg-hover);
+@media (hover: hover) {
+  .item-slot:hover {
+    background-color: var(--item-hover);
+  }
 }
 
 .item-slot.filled {
@@ -692,6 +725,29 @@ body.drawer-open {
 .qty-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* 2x2 grid mode: same container size, fewer/larger slots */
+html.grid-2x2 .trade-grid {
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: calc((min(20rem, 100%) - 0.1rem) / 2);
+}
+
+html.grid-2x2 .item-slot {
+  font-size: 1.5em;
+}
+
+html.grid-2x2 .item-slot[data-shg="h"]::before,
+html.grid-2x2 .item-slot[data-shg="g"]::before {
+  width: 27px;
+  height: 27px;
+  font-size: 17px;
+  top: 4px;
+  right: 4px;
+}
+
+html.grid-2x2 .item-slot-name {
+  font-size: 1rem;
 }
 
 .total-value {
@@ -829,9 +885,11 @@ body.drawer-open {
 .fv-hv-toggle.hv .knob {
   left: 50%;
 }
+
 .fv-hv-toggle.hv {
   border-color: var(--color-primary);
 }
+
 .fv-hv-toggle.hv .option {
   color: var(--color-text);
 }
@@ -854,9 +912,11 @@ body.drawer-open {
 .wfl-result-win {
   color: #00eb37;
 }
+
 .wfl-result-fair {
   color: #ffffff;
 }
+
 .wfl-result-lose {
   color: #e00016;
 }
@@ -882,9 +942,7 @@ body.drawer-open {
   cursor: pointer;
   font-size: 0.9rem;
   width: 6.5rem;
-  transition:
-    background 0.2s ease,
-    transform 0.1s ease;
+  transition: transform 0.1s ease;
 }
 
 #reset-trade-btn:hover,
@@ -920,10 +978,22 @@ body.drawer-open {
   width: 100%;
   height: 100%;
   background-color: var(--modal-overlay);
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.25s ease,
+    visibility 0.25s;
+}
+
+.modal-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .modal-content {
@@ -937,6 +1007,16 @@ body.drawer-open {
   flex-direction: column;
   position: relative;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transform: scale(0.94) translateY(10px);
+  transition:
+    transform 0.28s cubic-bezier(0.34, 1.26, 0.64, 1),
+    opacity 0.25s ease;
+  opacity: 0;
+}
+
+.modal-overlay.is-visible .modal-content {
+  transform: scale(1) translateY(0);
+  opacity: 1;
 }
 
 .close-modal {
@@ -972,7 +1052,7 @@ body.drawer-open {
 .rarity-filter-btn {
   background-color: var(--bg-light);
   color: var(--color-text);
-  border: 1px solid var(--border-color);
+  border: 0.5px solid var(--modal-btn-border);
   padding: 0.75rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -982,9 +1062,10 @@ body.drawer-open {
   transition: all 0.2s ease;
 }
 
-.rarity-filter-btn:hover {
-  background-color: var(--rarity-hover);
-  border-color: var(--color-primary);
+@media (hover: hover) {
+  .rarity-filter-btn:hover {
+    background-color: var(--rarity-hover);
+  }
 }
 
 .rarity-filter-btn:active {
@@ -993,7 +1074,6 @@ body.drawer-open {
 
 .rarity-filter-btn.active {
   background-color: var(--rarity-active);
-  border-color: var(--color-primary);
 }
 
 .shg-buttons {
@@ -1006,7 +1086,7 @@ body.drawer-open {
 .shg-btn {
   background-color: var(--bg-light);
   color: var(--color-text);
-  border: 1px solid var(--border-color);
+  border: 0.5px solid var(--modal-btn-border);
   padding: 0.75rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -1019,9 +1099,10 @@ body.drawer-open {
   min-width: 3rem;
 }
 
-.shg-btn:hover {
-  background-color: var(--shg-hover);
-  border-color: var(--color-primary);
+@media (hover: hover) {
+  .shg-btn:hover {
+    background-color: var(--shg-hover);
+  }
 }
 
 .shg-btn:active {
@@ -1030,7 +1111,6 @@ body.drawer-open {
 
 .shg-btn.active {
   background-color: var(--shg-active);
-  border-color: var(--color-primary);
 }
 
 .item-display-area {
@@ -1044,7 +1124,7 @@ body.drawer-open {
   width: 100%;
   padding: 0.75rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--border-color);
+  border: 0.5px solid var(--modal-btn-border);
   background-color: var(--bg-lighter);
   color: var(--color-text);
   font-size: 1rem;
@@ -1071,7 +1151,7 @@ body.drawer-open {
   height: 2.25rem;
   padding: 0 0.9rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--border-color);
+  border: 0.5px solid var(--modal-btn-border);
   background-color: var(--bg-lighter);
   color: var(--color-text);
   font-size: 0.95rem;
@@ -1098,7 +1178,7 @@ body.drawer-open {
   height: 2.25rem;
   padding: 0 0.65rem;
   border-radius: 0.5rem 0 0 0.5rem;
-  border: 1px solid var(--border-color);
+  border: 0.5px solid var(--modal-btn-border);
   border-right: none;
   background: var(--bg-lighter);
   color: var(--color-text);
@@ -1143,7 +1223,7 @@ body.drawer-open {
   left: 0;
   min-width: 100%;
   background: var(--bg-container);
-  border: 1px solid var(--border-color);
+  border: 0.5px solid var(--modal-btn-border);
   border-radius: 0.5rem;
   display: none;
   flex-direction: column;
@@ -1153,7 +1233,7 @@ body.drawer-open {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
-.modal-sort-trigger.open ~ .modal-sort-menu {
+.modal-sort-trigger.open~.modal-sort-menu {
   display: flex;
 }
 
@@ -1188,8 +1268,8 @@ body.drawer-open {
   width: 2rem;
   padding: 0;
   border-radius: 0 0.5rem 0.5rem 0;
-  border: 1px solid var(--border-color);
-  border-left: 1px solid var(--border-color);
+  border: 0.5px solid var(--modal-btn-border);
+  border-left: 0.5px solid var(--modal-btn-border);
   background: var(--bg-lighter);
   color: var(--color-text);
   cursor: pointer;
@@ -1228,7 +1308,7 @@ body.drawer-open {
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
-  gap: 0.3rem 0.5rem;
+  gap: 0.55rem 0.75rem;
   padding: 0.25rem;
   align-content: start;
   scrollbar-width: thin;
@@ -1238,15 +1318,18 @@ body.drawer-open {
 .item-list::-webkit-scrollbar {
   width: 12px;
 }
+
 .item-list::-webkit-scrollbar-track {
   background: var(--scrollbar-bg);
   border-radius: 10px;
 }
+
 .item-list::-webkit-scrollbar-thumb {
   background-color: var(--scrollbar-thumb);
   border-radius: 10px;
   border: 3px solid var(--scrollbar-bg);
 }
+
 .item-list::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-primary);
 }
@@ -1254,11 +1337,11 @@ body.drawer-open {
 .modal-item {
   background-color: var(--bg-light);
   color: var(--color-text);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 0.5rem;
   cursor: pointer;
   text-align: center;
   transition: background-color 0.2s ease;
-  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1268,8 +1351,10 @@ body.drawer-open {
   gap: 0.5rem;
 }
 
-.modal-item:hover {
-  background: var(--item-hover);
+@media (hover: hover) {
+  .modal-item:hover {
+    background: var(--item-hover);
+  }
 }
 
 .modal-item:active {
@@ -1317,6 +1402,30 @@ body.drawer-open {
   white-space: nowrap;
 }
 
+/* hide-item-info mode: decrease slot size to keep it square */
+html.hide-item-info .item-list {
+  grid-template-columns: repeat(auto-fill, minmax(5.7rem, 1fr));
+  gap: 0.3rem 0.5rem;
+}
+
+html.hide-item-info .modal-item-info {
+  display: none;
+}
+
+html.hide-item-info .modal-item-img {
+  width: 100%;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
+html.hide-item-info .modal-item-img img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 .guide-content {
   width: 100%;
   max-width: 900px;
@@ -1357,6 +1466,7 @@ body.drawer-open {
   color: var(--color-light-purple);
   text-decoration: none;
 }
+
 .guide-content a:hover,
 .guide-content a:focus {
   color: #b366ff;
@@ -1416,58 +1526,65 @@ html.dark-theme .guide-section h2 {
   color: #b0b0b0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
+
 html.dark-theme .guide-section p {
   color: #cccccc;
 }
+
 html.dark-theme .guide-content a {
   color: #a0a0a0;
 }
+
 html.dark-theme .guide-content a:hover,
 html.dark-theme .guide-content a:focus {
   color: #808080;
 }
+
 html.dark-theme .guide-list li {
   background: rgba(255, 255, 255, 0.05);
   color: #cccccc;
 }
+
 html.dark-theme .guide-list li:hover {
   background: rgba(255, 255, 255, 0.1);
   border-left-color: var(--color-secondary);
   transform: translateX(8px);
 }
+
 html.dark-theme .guide-list li strong {
   color: #fcfcfc;
 }
+
 html.dark-theme .stability-color {
   color: var(--stability-text-color);
 }
+
 html.dark-theme .trade-info .label {
   color: #a0a0a0;
 }
+
 html.dark-theme .trade-info a:hover {
   color: #b3b3b3;
 }
+
 html.dark-theme .guide-closing {
   color: #aaaaaa;
   background: rgba(255, 255, 255, 0.05);
 }
+
 html.dark-theme .guide-section {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 html.dark-theme .modal-item-value {
   color: var(--color-text-secondary);
 }
 
 @media screen and (max-width: 68rem) {
-  .site-header {
-    border-bottom: 1px solid var(--color-primary);
-  }
-  .trade-grid {
-    border: 1px solid var(--color-secondary);
-  }
   .fv-hv-toggle {
     border: 1px solid var(--color-secondary);
   }
+
   .trade-info {
     font-size: 0.8rem;
   }
@@ -1477,17 +1594,44 @@ html.dark-theme .modal-item-value {
   html {
     font-size: clamp(10px, 2.2vw, 14px);
   }
+
   body {
     padding: 0.5rem 0.5rem;
   }
+
   .trade-info {
     font-size: 0.7rem;
   }
-  .site-header {
-    border-bottom: 0.75px solid var(--color-primary);
-  }
+
   .site-title {
     font-size: 1.2rem;
+  }
+
+  .auth-btn {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    gap: 0.25rem;
+    min-height: unset;
+  }
+
+  .auth-btn.auth-loading {
+    min-height: unset;
+  }
+
+  .auth-btn img,
+  .auth-btn svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .settings-btn {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+
+  .settings-btn svg {
+    width: 1.05rem;
+    height: 1.05rem;
   }
 
   .trade-page-container {
@@ -1516,16 +1660,19 @@ html.dark-theme .modal-item-value {
     margin-bottom: 1rem;
     padding-top: 0.25rem;
   }
+
   .wfl-bar-labels {
     font-size: 1rem;
     gap: 1rem;
     margin-bottom: 0.4rem;
     height: 1.5rem;
   }
+
   .wfl-bar-labels span::after {
     margin: 0 0.5rem;
     right: -1rem;
   }
+
   .wfl-bar-track {
     height: 0.75rem;
   }
@@ -1542,13 +1689,18 @@ html.dark-theme .modal-item-value {
     gap: 0.2rem;
     grid-auto-rows: calc((100% - 0.4rem) / 3);
     margin-top: 0.5rem;
-    border: 1px solid var(--color-secondary);
   }
 
   .item-slot {
     min-width: auto;
     padding: 0.15rem;
+    transition: background-color 0.08s ease;
   }
+
+  .item-slot.filled {
+    border-width: 0.5px;
+  }
+
   .item-slot[data-shg="h"]::before,
   .item-slot[data-shg="g"]::before {
     width: 14px;
@@ -1556,14 +1708,34 @@ html.dark-theme .modal-item-value {
     font-size: 9px;
     top: 2px;
     right: 2px;
+    border-radius: 2px;
   }
+
   .item-slot-name {
     font-size: 0.7rem;
   }
 
+  html.grid-2x2 .trade-grid {
+    grid-auto-rows: calc((100% - 0.2rem) / 2);
+  }
+
+  html.grid-2x2 .item-slot[data-shg="h"]::before,
+  html.grid-2x2 .item-slot[data-shg="g"]::before {
+    width: 21px;
+    height: 21px;
+    font-size: 14px;
+    top: 3px;
+    right: 3px;
+    border-radius: 3px;
+  }
+
+  html.grid-2x2 .item-slot-name {
+    font-size: 1.05rem;
+  }
+
   .item-list {
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.2rem 0.3rem;
+    gap: 0.45rem 0.6rem;
   }
 
   .total-value {
@@ -1571,6 +1743,7 @@ html.dark-theme .modal-item-value {
     top: -3.5rem;
     min-width: auto;
   }
+
   .wfl-container {
     flex: 0 0 clamp(7rem, 17vw, 14rem);
     width: clamp(7rem, 17vw, 14rem);
@@ -1584,6 +1757,7 @@ html.dark-theme .modal-item-value {
     margin-bottom: 0;
     line-height: 1.2;
   }
+
   .wfl-mode {
     margin-top: 0.05rem;
   }
@@ -1601,32 +1775,38 @@ html.dark-theme .modal-item-value {
     bottom: -2.5rem;
     gap: 0.3rem;
   }
+
   .fv-hv-switch .label {
     font-size: 1rem;
   }
+
   .fv-hv-toggle {
     --width: 8rem;
     --height: 1.8rem;
     border: 1px solid var(--color-secondary);
     padding: 0.15rem;
   }
+
   .fv-hv-toggle .option {
     font-size: 0.85rem;
   }
+
   .fv-hv-toggle .knob {
     font-size: 0.8rem;
   }
 
   .modal-content {
-    width: 95vw;
-    height: 85vh;
+    width: 92vw;
+    height: 80vh;
     padding: 0.75rem;
   }
+
   .modal-body {
     flex-direction: column;
     gap: 0.75rem;
     margin-top: 0.5rem;
   }
+
   .rarity-sidebar {
     flex: 0 0 auto;
     flex-direction: row;
@@ -1637,20 +1817,24 @@ html.dark-theme .modal-item-value {
     scrollbar-width: none;
     padding-bottom: 0.2rem;
   }
+
   .rarity-sidebar::-webkit-scrollbar {
     display: none;
   }
+
   .rarity-filter-btn {
     flex: 1 0 auto;
     min-width: 5rem;
     padding: 0.5rem;
     font-size: 0.85rem;
   }
+
   .shg-buttons {
     gap: 0.5rem;
     margin-top: 0;
     flex: 0 0 auto;
   }
+
   .shg-btn {
     flex: 0 0 auto;
     width: auto;
@@ -1659,27 +1843,33 @@ html.dark-theme .modal-item-value {
     font-size: 0.85rem;
     padding: 0.5rem;
   }
+
   .item-list {
     grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
-    gap: 0.5rem;
+    gap: 0.7rem;
   }
+
   .modal-item {
     padding: 0.3rem;
     gap: 0.3rem;
   }
+
   .modal-item-name {
     font-size: 0.65rem;
   }
+
   #item-search {
     font-size: 0.85rem;
     padding: 0.5rem;
     margin-bottom: 0.75rem;
   }
+
   .close-modal {
     font-size: 1.5rem;
     top: 0.5rem;
     right: 0.75rem;
   }
+
   .modal-content h3 {
     font-size: 1rem;
     margin-bottom: 0.5rem;
@@ -1689,22 +1879,27 @@ html.dark-theme .modal-item-value {
     padding: 1.5rem 1rem;
     max-width: 100%;
   }
+
   .guide-section {
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
   }
+
   .guide-section h2 {
     font-size: 2rem;
     margin-bottom: 1rem;
   }
+
   .guide-section p {
     font-size: 1.15rem;
   }
+
   .guide-list li {
     padding: 0.85rem 1rem;
     margin-bottom: 0.85rem;
     font-size: 1.25rem;
   }
+
   .guide-closing {
     padding: 1rem;
     font-size: 1.15rem;
@@ -1715,15 +1910,17 @@ html.dark-theme .modal-item-value {
   .trade-page-container {
     padding-bottom: 3.75rem;
   }
+
   .info-lines {
     bottom: 0.65rem;
     left: 0.65rem;
     font-size: 0.6rem;
     gap: 0.2rem;
   }
+
   .item-list {
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.15rem 0.2rem;
+    gap: 0.4rem 0.5rem;
   }
 }
 
@@ -1735,8 +1932,19 @@ html.dark-theme .modal-item-value {
   .site-header {
     padding: 0 0.75rem;
   }
+
   .site-title {
     font-size: 1.05rem;
+  }
+
+  .settings-btn {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+
+  .settings-btn svg {
+    width: 0.95rem;
+    height: 0.95rem;
   }
 
   .trade-info {
@@ -1747,6 +1955,7 @@ html.dark-theme .modal-item-value {
     padding: 0.5rem 0.5rem 4rem 0.5rem;
     position: relative;
   }
+
   .info-lines {
     bottom: 0.5rem;
     left: 0.5rem;
@@ -1758,10 +1967,12 @@ html.dark-theme .modal-item-value {
     font-size: 0.9rem;
     gap: 0.75rem;
   }
+
   .wfl-bar-labels span::after {
     margin: 0 0.35rem;
     right: -0.75rem;
   }
+
   .wfl-bar-track {
     height: 0.6rem;
   }
@@ -1770,9 +1981,11 @@ html.dark-theme .modal-item-value {
     gap: 0.2rem;
     grid-auto-rows: calc((100% - 0.4rem) / 3);
   }
+
   .item-slot {
     padding: 0.1rem;
   }
+
   .item-slot[data-shg="h"]::before,
   .item-slot[data-shg="g"]::before {
     width: 12px;
@@ -1781,34 +1994,58 @@ html.dark-theme .modal-item-value {
     top: 1px;
     right: 1px;
   }
+
   .item-slot-name {
     font-size: 0.5rem;
   }
+
   .qty-btn {
     font-size: 0.55em;
   }
+
   .qty-input {
     font-size: 0.55em;
+  }
+
+  html.grid-2x2 .trade-grid {
+    grid-auto-rows: calc((100% - 0.2rem) / 2);
+  }
+
+  html.grid-2x2 .item-slot[data-shg="h"]::before,
+  html.grid-2x2 .item-slot[data-shg="g"]::before {
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    top: 2px;
+    right: 2px;
+  }
+
+  html.grid-2x2 .item-slot-name {
+    font-size: 0.75rem;
   }
 
   .total-value {
     font-size: 1.2rem;
     top: -3rem;
   }
+
   .wfl-container {
     flex: 0 0 clamp(5rem, 17vw, 8rem);
     width: clamp(5rem, 17vw, 8rem);
     gap: 0;
     padding: 0;
   }
+
   .wfl-actions {
     gap: 0.3rem;
     margin-top: 0.6rem;
   }
+
   #wfl-result {
     font-size: 1.7rem;
     padding: 0.3rem 0.3rem;
   }
+
   #reset-trade-btn,
   #save-trade-btn {
     padding: 0.25rem 0.5rem;
@@ -1822,49 +2059,60 @@ html.dark-theme .modal-item-value {
     right: 0.3rem;
     bottom: -2rem;
   }
+
   .fv-hv-switch .label {
     font-size: 0.65rem;
   }
+
   .fv-hv-toggle {
     --width: 6rem;
     --height: 1.5rem;
   }
+
   .fv-hv-toggle .option {
     font-size: 0.65rem;
   }
 
   .modal-content {
-    width: 98vw;
-    height: 90vh;
+    width: 92vw;
+    height: 75vh;
     padding: 0.5rem;
   }
+
   .rarity-filter-btn {
     padding: 0.45rem;
     font-size: 0.8rem;
   }
+
   .shg-btn {
     min-width: 2.5rem;
     font-size: 0.8rem;
     padding: 0.45rem;
   }
+
   .item-list {
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.1rem 0.15rem;
+    gap: 0.3rem 0.4rem;
   }
+
   .modal-item {
     padding: 0.3rem;
     gap: 0.3rem;
   }
+
   .modal-item-name {
     font-size: 0.6rem;
   }
+
   #item-search {
     font-size: 0.75rem;
     padding: 0.4rem;
   }
+
   .close-modal {
     font-size: 1.3rem;
   }
+
   .modal-content h3 {
     font-size: 0.9rem;
   }
@@ -1874,6 +2122,7 @@ html.dark-theme .modal-item-value {
   html {
     font-size: clamp(13px, 3vh, 16px);
   }
+
   body {
     padding: 0.3rem 0.5rem;
   }
@@ -1881,8 +2130,8 @@ html.dark-theme .modal-item-value {
   .site-header {
     padding: 0 1rem;
     margin-bottom: 0.3rem;
-    border-bottom: 1px solid var(--color-primary);
   }
+
   .site-title {
     font-size: 1.4rem;
     font-weight: 600;
@@ -1893,6 +2142,7 @@ html.dark-theme .modal-item-value {
     margin-top: 0.3rem;
     height: auto;
   }
+
   .info-lines {
     bottom: 0.7rem;
     left: 0.8rem;
@@ -1904,16 +2154,19 @@ html.dark-theme .modal-item-value {
     margin-bottom: 0.8rem;
     padding-top: 0.3rem;
   }
+
   .wfl-bar-labels {
     font-size: 1.1rem;
     gap: 1.2rem;
     margin-bottom: 0.4rem;
     height: 1.8rem;
   }
+
   .wfl-bar-labels span::after {
     margin: 0 0.6rem;
     right: -1.2rem;
   }
+
   .wfl-bar-track {
     height: 0.8rem;
   }
@@ -1923,18 +2176,19 @@ html.dark-theme .modal-item-value {
     margin-top: 0;
     justify-content: center;
   }
+
   .offer-container {
     min-height: auto;
     max-width: none;
     flex: 0 1 100%;
   }
+
   .offer-container h2 {
     font-size: 1.2rem;
     margin-bottom: 0.4rem;
   }
 
   .trade-grid {
-    border: 1px solid var(--color-secondary);
     gap: 0.25rem;
     grid-auto-rows: calc((100% - 0.5rem) / 3);
     margin-top: 0.4rem;
@@ -1942,9 +2196,11 @@ html.dark-theme .modal-item-value {
     width: 100%;
     aspect-ratio: 1 / 1;
   }
+
   .item-slot {
     padding: 0.15rem;
   }
+
   .item-slot[data-shg="h"]::before,
   .item-slot[data-shg="g"]::before {
     width: 20px;
@@ -1953,8 +2209,26 @@ html.dark-theme .modal-item-value {
     top: 1px;
     right: 1px;
   }
+
   .item-slot-name {
     font-size: 0.7rem;
+  }
+
+  html.grid-2x2 .trade-grid {
+    grid-auto-rows: calc((100% - 0.25rem) / 2);
+  }
+
+  html.grid-2x2 .item-slot[data-shg="h"]::before,
+  html.grid-2x2 .item-slot[data-shg="g"]::before {
+    width: 30px;
+    height: 30px;
+    font-size: 21px;
+    top: 2px;
+    right: 2px;
+  }
+
+  html.grid-2x2 .item-slot-name {
+    font-size: 1.05rem;
   }
 
   .total-value {
@@ -1962,20 +2236,24 @@ html.dark-theme .modal-item-value {
     top: -3.7rem;
     font-weight: 500;
   }
+
   .wfl-container {
     flex: 0 0 clamp(8rem, 18vw, 16rem);
     width: clamp(8rem, 18vw, 16rem);
     gap: 0;
     padding: 0;
   }
+
   .wfl-actions {
     gap: 0.6rem;
     margin-top: 0.8rem;
   }
+
   #wfl-result {
     font-size: 2rem;
     padding: 0.4rem 0.3rem;
   }
+
   #reset-trade-btn,
   #save-trade-btn {
     padding: 0.4rem 0.8rem;
@@ -1989,18 +2267,22 @@ html.dark-theme .modal-item-value {
     bottom: -2.5rem;
     gap: 0.5rem;
   }
+
   .fv-hv-switch .label {
     font-size: 0.95rem;
     font-weight: 600;
   }
+
   .fv-hv-toggle {
     --width: 8rem;
     --height: 1.8rem;
     border: 1px solid var(--color-secondary);
   }
+
   .fv-hv-toggle .option {
     font-size: 0.9rem;
   }
+
   .fv-hv-toggle .knob {
     font-size: 0.85rem;
   }
@@ -2009,19 +2291,23 @@ html.dark-theme .modal-item-value {
     width: 95vw;
     height: 80vh;
   }
+
   .rarity-sidebar {
     flex: 0 0 auto;
     gap: 0.4rem;
   }
+
   .rarity-filter-btn {
     padding: 0.5rem 0.4rem;
     font-size: 0.8rem;
     min-width: 4.5rem;
   }
+
   .shg-buttons {
     gap: 0.5rem;
     margin-top: 0.4rem;
   }
+
   .shg-btn {
     width: auto;
     height: auto;
@@ -2029,15 +2315,18 @@ html.dark-theme .modal-item-value {
     font-size: 0.8rem;
     padding: 0.5rem 0.4rem;
   }
+
   #item-search {
     font-size: 0.85rem;
     padding: 0.5rem;
     margin-bottom: 0.5rem;
   }
+
   .item-list {
     grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
-    gap: 0.4rem;
+    gap: 0.6rem;
   }
+
   .modal-item-name {
     font-size: 0.65rem;
   }
@@ -2049,28 +2338,38 @@ html.dark-theme .modal-item-value {
     min-height: auto;
     padding: 0.75rem 1.5rem 5rem 1.5rem;
   }
+
   .info-lines {
     bottom: 1.25rem;
     left: 1.5rem;
     font-size: 0.8rem;
   }
+
   .fv-hv-switch {
     position: absolute;
     right: 1rem;
     bottom: -3rem;
   }
+
   .wfl-container {
     flex: 0 0 12rem;
     width: 12rem;
   }
+
   .trade-grid {
     max-width: 20rem;
     gap: 0.1rem;
     grid-auto-rows: calc((min(20rem, 100%) - 0.2rem) / 3);
   }
+
+  html.grid-2x2 .trade-grid {
+    grid-auto-rows: calc((min(20rem, 100%) - 0.1rem) / 2);
+  }
+
   .offer-container {
     min-height: 20rem;
   }
+
   .total-value {
     top: -3rem;
   }
@@ -2082,8 +2381,6 @@ html.dark-theme .modal-item-value {
   gap: 0.35rem;
   background: var(--bg-lighter);
   border: 1px solid var(--border-color);
-  color: var(--color-text);
-  padding: 0.3rem 0.7rem;
   border-radius: 999px;
   cursor: pointer;
   font-size: 0.8rem;
@@ -2093,15 +2390,24 @@ html.dark-theme .modal-item-value {
     background 0.2s ease,
     border-color 0.2s ease;
   white-space: nowrap;
-  max-width: 8rem;
+  max-width: 10rem;
   overflow: hidden;
-  min-height: 2rem;
-  min-width: 3.5rem;
+  min-height: 2.2rem;
+  min-width: 5rem;
+  padding: 0 0.85rem;
 }
 
 .auth-btn.auth-loading {
   min-width: 3.5rem;
   min-height: 2rem;
+}
+
+.auth-btn img {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .auth-btn:hover {
@@ -2114,7 +2420,7 @@ html.dark-theme .modal-item-value {
 }
 
 .auth-username {
-  max-width: 5rem;
+  max-width: 7rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2187,6 +2493,7 @@ html.dark-theme .modal-item-value {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -2208,6 +2515,7 @@ html.dark-theme .modal-item-value {
     transform: translateY(12px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -2280,9 +2588,11 @@ html.dark-theme .modal-item-value {
 .inv-btn-primary:hover {
   opacity: 0.9;
 }
+
 .inv-btn-primary:active {
   transform: scale(0.97);
 }
+
 .inv-btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -2327,13 +2637,366 @@ html.dark-theme .modal-item-value {
 .sync-status.sync-saving {
   color: var(--stability-label-fluctuating);
 }
+
 .sync-status.sync-done {
   color: var(--stability-label-rising);
 }
+
 .sync-status.sync-error {
   color: var(--stability-label-dropping);
   cursor: pointer;
 }
+
 .sync-status.sync-error:hover {
   background: var(--bg-hover);
+}
+
+.settings-btn {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.settings-btn svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.settings-btn:hover {
+  background: none;
+}
+
+.settings-btn:active {
+  transform: scale(0.92);
+}
+
+.settings-modal-content {
+  max-width: 28rem;
+  height: auto;
+  max-height: 80vh;
+}
+
+.settings-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  overflow-y: auto;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: var(--bg-light);
+  border: none;
+  border-radius: 0.6rem;
+}
+
+.setting-row-label {
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.toggle-switch {
+  --toggle-width: 2.75rem;
+  --toggle-height: 1.5rem;
+  width: var(--toggle-width);
+  height: var(--toggle-height);
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-lighter);
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.toggle-switch-knob {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  transform: translateY(-50%);
+  width: calc(var(--toggle-height) - 6px);
+  height: calc(var(--toggle-height) - 6px);
+  border-radius: 50%;
+  background: var(--color-text-secondary);
+  transition:
+    left 0.18s cubic-bezier(0.2, 0.9, 0.2, 1),
+    background 0.18s ease;
+}
+
+.toggle-switch.active {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-primary));
+  border-color: var(--color-primary);
+}
+
+.toggle-switch.active .toggle-switch-knob {
+  left: calc(100% - (var(--toggle-height) - 6px) - 2px);
+  background: var(--color-text);
+}
+
+/* ── Multi-pick modal footer ───────────────────────────────────────────── */
+
+/* Footer hidden by default (close-immediately mode) */
+.trade-modal-footer {
+  display: none;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--panel-border);
+  margin-top: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Show footer only when multi-pick mode is active */
+html.multi-pick-mode .trade-modal-footer {
+  display: flex;
+}
+
+.trade-modal-cancel-btn {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--border-color);
+  padding: 0 1rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: inherit;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+  white-space: nowrap;
+}
+
+.trade-modal-cancel-btn:hover {
+  background: var(--bg-hover);
+  color: var(--color-text);
+}
+
+.trade-modal-cancel-btn:active {
+  transform: scale(0.96);
+}
+
+.trade-modal-done-btn {
+  background: var(--button-bg);
+  color: var(--color-text);
+  border: none;
+  padding: 0 1.1rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: background 0.18s ease;
+  white-space: nowrap;
+}
+
+.trade-modal-done-btn:hover {
+  background: var(--button-hover);
+}
+
+.trade-modal-done-btn:active {
+  transform: scale(0.96);
+}
+
+/* Pending item highlight */
+.modal-item.inv-pending {
+  background-color: var(--item-hover);
+}
+
+/* ── Trade confirm dialog ──────────────────────────────────────────────── */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s;
+}
+
+.confirm-overlay.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.confirm-card {
+  background: var(--bg-container);
+  border: 1px solid var(--border-color);
+  border-radius: 0.85rem;
+  padding: 1.6rem 1.8rem 1.4rem;
+  width: 90%;
+  max-width: 26rem;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+  transform: scale(0.92) translateY(8px);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.confirm-overlay.is-visible .confirm-card {
+  transform: scale(1) translateY(0);
+}
+
+.confirm-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.confirm-msg {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 0.6rem;
+}
+
+.confirm-actions button {
+  padding: 0.5rem 1.3rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease,
+    border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.confirm-actions button:active {
+  transform: scale(0.95);
+}
+
+.confirm-btn-secondary {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.confirm-btn-secondary:hover {
+  background: var(--bg-hover);
+  color: var(--color-text);
+}
+
+.confirm-btn-danger {
+  background: rgba(220, 38, 38, 0.18);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+}
+
+.confirm-btn-danger:hover {
+  background: rgba(220, 38, 38, 0.32);
+  color: #f87171;
+  border-color: #ef4444 !important;
+}
+
+.confirm-btn-primary {
+  background: var(--button-bg);
+  color: var(--color-text);
+  border-color: var(--color-primary) !important;
+}
+
+.confirm-btn-primary:hover {
+  background: var(--button-hover);
+}
+
+@media (max-width: 32rem) {
+  .confirm-card {
+    padding: 1.3rem 1.2rem 1.1rem;
+    max-width: 92%;
+  }
+
+  .confirm-title {
+    font-size: 1rem;
+  }
+
+  .confirm-msg {
+    font-size: 0.85rem;
+  }
+
+  .confirm-actions button {
+    font-size: 0.85rem;
+    padding: 0.45rem 1rem;
+  }
+}
+
+/* ── Hide Item Info Responsive Overrides ── */
+@media screen and (max-width: 59rem) {
+  html.hide-item-info .item-list {
+    grid-template-columns: repeat(auto-fill, minmax(5.1rem, 1fr));
+    gap: 0.7rem;
+  }
+}
+
+@media screen and (min-width: 26.1rem) and (max-width: 47rem) {
+  html.hide-item-info .item-list {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.4rem 0.5rem;
+  }
+}
+
+@media screen and (max-width: 26rem) {
+  html.hide-item-info .item-list {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.3rem 0.4rem;
+  }
+}
+
+@media screen and (max-height: 37rem) and (orientation: landscape) {
+  html.hide-item-info .item-list {
+    grid-template-columns: repeat(auto-fill, minmax(4.7rem, 1fr));
+    gap: 0.6rem;
+  }
 }

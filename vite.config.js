@@ -7,6 +7,9 @@ export default defineConfig(({ mode }) => ({
   publicDir: '../public',
   // 'dev' uses development mode, 'build' and 'preview' use production
   base: mode === 'development' ? '/' : '/FTF-Trade-Calculator/',
+  server: {
+    allowedHosts: true
+  },
   build: {
     outDir: '../dist',
     emptyOutDir: true,

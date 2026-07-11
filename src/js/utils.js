@@ -266,6 +266,7 @@ export class FTFModalController {
     this.renderItem = config.renderItem;
     this.showAddsItem = config.showAddsItem || false;
     this.onAddsClick = config.onAddsClick || null;
+    this.isAddsPending = config.isAddsPending || (() => false);
     this.pageSize = config.pageSize || 40;
     this.onCloseRequest = config.onCloseRequest || (() => true);
     this.onOpen = config.onOpen || (() => {});
@@ -300,7 +301,7 @@ export class FTFModalController {
       };
     }
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && this.modal && this.modal.style.display === "flex") {
+      if (e.key === "Escape" && this.modal && this.modal.classList.contains("is-visible")) {
         this.tryClose();
       }
     });
@@ -366,7 +367,7 @@ export class FTFModalController {
 
     this.onOpen();
 
-    if (this.modal) this.modal.style.display = "flex";
+    if (this.modal) this.modal.classList.add("is-visible");
 
     setTimeout(() => this.updateDisplayedItems(), 0);
 
@@ -376,7 +377,7 @@ export class FTFModalController {
   }
 
   close() {
-    if (this.modal) this.modal.style.display = "none";
+    if (this.modal) this.modal.classList.remove("is-visible");
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer);
       this.searchDebounceTimer = null;
@@ -465,6 +466,9 @@ export class FTFModalController {
     if (willShowAdds && this.onAddsClick) {
       const div = document.createElement("div");
       div.className = "modal-item";
+      if (this.isAddsPending()) {
+        div.classList.add("inv-pending");
+      }
       div.innerHTML = `
           <div class="modal-item-img" style="display: flex; align-items: center; justify-content: center; background: transparent;">
               <svg viewBox="0 0 24 24" style="width: 80%; height: 80%;" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">

@@ -20,9 +20,10 @@ let currentRarity = "all";
 let modalSortController = null;
 let _rawSavedTrade = null;
 
-let filteredItemCache = []; 
+let filteredItemCache = [];
 let modalController = null;
 let saveTradeLastClick = 0;
+let pendingTradeItems = []; // multi-pick staging area
 
 const themeToggle = document.getElementById("theme-toggle");
 const htmlElement = document.documentElement;
@@ -329,12 +330,75 @@ let searchDebounceTimer = null;
 
 
 
+function isMultiPickMode() {
+  return document.documentElement.classList.contains("multi-pick-mode");
+}
+
+function showTradeConfirm({ title, message, confirmLabel, cancelLabel, onConfirm, variant }) {
+  const overlay = document.getElementById("trade-confirm-dialog");
+  if (!overlay) return;
+  document.getElementById("trade-confirm-icon").style.display = "none";
+  document.getElementById("trade-confirm-title").textContent = title || "Are you sure?";
+  document.getElementById("trade-confirm-msg").textContent = message || "";
+  const actions = document.getElementById("trade-confirm-actions");
+  actions.innerHTML = "";
+
+  const btnCancel = document.createElement("button");
+  btnCancel.className = "confirm-btn-secondary";
+  btnCancel.textContent = cancelLabel || "Cancel";
+  btnCancel.onclick = () => overlay.classList.remove("is-visible");
+  actions.appendChild(btnCancel);
+
+  const btnConfirm = document.createElement("button");
+  btnConfirm.className = variant === "danger" ? "confirm-btn-danger" : "confirm-btn-primary";
+  btnConfirm.textContent = confirmLabel || "Confirm";
+  btnConfirm.onclick = () => {
+    overlay.classList.remove("is-visible");
+    if (onConfirm) onConfirm();
+  };
+  actions.appendChild(btnConfirm);
+  overlay.classList.add("is-visible");
+  btnCancel.focus();
+}
+
+function updateTradeDoneButton() {
+  const btn = document.getElementById("trade-modal-done");
+  if (!btn) return;
+  const n = pendingTradeItems.length;
+  if (n > 0) {
+    btn.textContent = `Add ${n} Item${n !== 1 ? "s" : ""}`;
+    btn.style.display = "";
+  } else {
+    btn.style.display = "none";
+  }
+}
+
+function commitTradeAndClose() {
+  pendingTradeItems.forEach((item) => {
+    if (activeArray && activeArray.length < MAX_SLOTS) {
+      activeArray.push(item);
+    }
+  });
+  pendingTradeItems = [];
+  updateTradeDoneButton();
+  if (modalController) modalController.close();
+  setTimeout(() => updateAll(), 0);
+}
+
+function discardTradeItems() {
+  pendingTradeItems = [];
+  updateTradeDoneButton();
+  if (modalController) modalController.close();
+}
+
 function openModal(targetArray) {
   if (targetArray.length >= MAX_SLOTS) {
     alert(`All ${MAX_SLOTS} slots are full! Remove an item first.`);
     return;
   }
   activeArray = targetArray;
+  pendingTradeItems = [];
+  updateTradeDoneButton();
   if (modalController) modalController.open();
 }
 
@@ -423,8 +487,28 @@ async function init() {
       allItems: allItems,
       sortController: modalSortController,
       showAddsItem: true,
-      onAddsClick: () => {
-        activeArray.push({
+      onCloseRequest: () => {
+        if (isMultiPickMode() && pendingTradeItems.length > 0) {
+          const n = pendingTradeItems.length;
+          showTradeConfirm({
+            title: "Discard selected items?",
+            message: `You have ${n} item${n !== 1 ? "s" : ""} selected that won't be added. Press "Add ${n} Item${n !== 1 ? "s" : ""}" if you want ${n !== 1 ? "them" : "it"} added.`,
+            confirmLabel: "Discard",
+            cancelLabel: "Go Back",
+            variant: "danger",
+            onConfirm: () => {
+              pendingTradeItems = [];
+              updateTradeDoneButton();
+              modalController.close();
+            },
+          });
+          return false;
+        }
+        return true;
+      },
+      isAddsPending: () => pendingTradeItems.some((p) => p.isAdds),
+      onAddsClick: (e) => {
+        const addsItem = {
           name: "Adds",
           baseValue: 0,
           quantity: 0,
@@ -433,9 +517,27 @@ async function init() {
           stabilityType: null,
           shg: null,
           isAdds: true,
-        });
-        modalController.close();
-        setTimeout(() => updateAll(), 0);
+        };
+
+        const div = e ? e.currentTarget : null;
+
+        if (!isMultiPickMode()) {
+          activeArray.push(addsItem);
+          modalController.close();
+          setTimeout(() => updateAll(), 0);
+        } else {
+          const existingIdx = pendingTradeItems.findIndex((p) => p.isAdds);
+          if (existingIdx !== -1) {
+            pendingTradeItems.splice(existingIdx, 1);
+            if (div) div.classList.remove("inv-pending");
+          } else {
+            const remainingSlots = MAX_SLOTS - activeArray.length - pendingTradeItems.length;
+            if (remainingSlots <= 0) return; // silently ignore if full
+            pendingTradeItems.push(addsItem);
+            if (div) div.classList.add("inv-pending");
+          }
+          updateTradeDoneButton();
+        }
       },
       renderItem: (item, currentSHG) => {
         const div = document.createElement("div");
@@ -443,7 +545,12 @@ async function init() {
         let tempItem = { ...item, shg: currentSHG || null };
         let val = FTFData.calculateItemValue(tempItem);
         let displayVal = formatNumberForDisplay(val);
-    
+
+        const isPending = pendingTradeItems.some(
+          (p) => p.name === item.name && (p.shg || null) === (currentSHG || null)
+        );
+        if (isPending) div.classList.add("inv-pending");
+
         div.innerHTML = `
             <div class="modal-item-img">
                 <img src="items/${encodeURIComponent(item.name)}.webp"
@@ -455,18 +562,43 @@ async function init() {
                 <div class="modal-item-name">${item.name}</div>
                 <div class="modal-item-value">${displayVal}</div>
             </div>`;
-    
+
         div.onclick = () => {
-          const stabilityType = FTFData.parseStabilityType(item.stability);
-          activeArray.push({
-            ...item,
-            baseValue: item.value,
-            quantity: 1,
-            stabilityType: stabilityType,
-            shg: currentSHG || null,
-          });
-          modalController.close();
-          setTimeout(() => updateAll(), 0);
+          if (!isMultiPickMode()) {
+            // Original behaviour: close immediately
+            const stabilityType = FTFData.parseStabilityType(item.stability);
+            activeArray.push({
+              ...item,
+              baseValue: item.value,
+              quantity: 1,
+              stabilityType: stabilityType,
+              shg: currentSHG || null,
+            });
+            modalController.close();
+            setTimeout(() => updateAll(), 0);
+          } else {
+            // Multi-pick mode: toggle pending
+            const existingIdx = pendingTradeItems.findIndex(
+              (p) => p.name === item.name && (p.shg || null) === (currentSHG || null)
+            );
+            if (existingIdx !== -1) {
+              pendingTradeItems.splice(existingIdx, 1);
+              div.classList.remove("inv-pending");
+            } else {
+              const remainingSlots = MAX_SLOTS - activeArray.length - pendingTradeItems.length;
+              if (remainingSlots <= 0) return; // silently ignore if full
+              const stabilityType = FTFData.parseStabilityType(item.stability);
+              pendingTradeItems.push({
+                ...item,
+                baseValue: item.value,
+                quantity: 1,
+                stabilityType,
+                shg: currentSHG || null,
+              });
+              div.classList.add("inv-pending");
+            }
+            updateTradeDoneButton();
+          }
         };
         return div;
       }
@@ -496,7 +628,7 @@ function renderFvHvSwitch() {
     toggle.querySelector(".fv-hv-toggle").classList.toggle("hv", modeHV);
     toggle.querySelector(".knob").textContent = modeHV ? "hv" : "fv";
     updateAll();
-    if (modalController && modal && modal.style.display === "flex") {
+    if (modalController && modal && modal.classList.contains("is-visible")) {
       modalController.updateDisplayedItems();
     }
   };
@@ -536,6 +668,21 @@ if (resetBtn) {
 
 init();
 
+const tradeModalDoneBtn = document.getElementById("trade-modal-done");
+const tradeModalCancelBtn = document.getElementById("trade-modal-cancel");
+
+if (tradeModalDoneBtn) {
+  tradeModalDoneBtn.addEventListener("click", commitTradeAndClose);
+}
+if (tradeModalCancelBtn) {
+  tradeModalCancelBtn.addEventListener("click", () => {
+    if (pendingTradeItems.length > 0) {
+      discardTradeItems();
+    } else {
+      if (modalController) modalController.close();
+    }
+  });
+}
 
 
 const saveTradeBtn = document.getElementById("save-trade-btn");
@@ -543,11 +690,11 @@ if (saveTradeBtn) {
   saveTradeBtn.addEventListener("click", async () => {
     const now = Date.now();
     if (now - saveTradeLastClick < 3000) return;
-    
+
     const yourItems = yourTrade.slice();
     const theirItems = theirTrade.slice();
     if (yourItems.length === 0 && theirItems.length === 0) return;
-    
+
     saveTradeLastClick = now;
 
     FTFAuth.logTradeAnalytics(yourItems, theirItems).catch(console.error);
@@ -558,7 +705,7 @@ if (saveTradeBtn) {
     try {
       const { exportTradeImage } = await import('./canvas.js');
       await exportTradeImage(yourItems, theirItems, LAST_UPDATED, modeHV);
-      
+
       const elapsed = Date.now() - saveTradeLastClick;
       const remaining = Math.max(0, 3000 - elapsed);
       setTimeout(() => {
