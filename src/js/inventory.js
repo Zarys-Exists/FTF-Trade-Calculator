@@ -272,9 +272,9 @@ function getSortedInventory() {
       const dir = sortDescending ? -1 : 1;
       return arr.sort(
         (a, b) =>
-          dir *
-          ((RARITY_ORDER[a.rarity] ?? 99) - (RARITY_ORDER[b.rarity] ?? 99)) ||
-          a.name.localeCompare(b.name),
+          dir * ((RARITY_ORDER[a.rarity] ?? 99) - (RARITY_ORDER[b.rarity] ?? 99)) ||
+          ((FTFData.calculateItemValue(b) * (b.quantity || 1)) - (FTFData.calculateItemValue(a) * (a.quantity || 1))) ||
+          a.name.localeCompare(b.name)
       );
     }
     case "name":
@@ -307,6 +307,7 @@ function getSortedInventory() {
       return arr;
   }
 }
+
 
 function getSortedFilteredInventory() {
   const sorted = getSortedInventory();
