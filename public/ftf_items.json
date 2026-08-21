@@ -230,7 +230,7 @@
         {"id": "E034","name": "Sweet Snowcone","value": 9,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 28},
         {"id": "E014","name": "Candy Corn","value": 8,"rarity": "Epic","demand": 1,"stability": "stable","rank": 29},
         {"id": "E037","name": "Forbidden Fortress","value": 8,"rarity": "Epic","demand": 1.0,"stability": "stable","rank": 30},
-        {"id": "E041","name": "Princess Palace","value": 8,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 31},
+        {"id": "E041","name": "Princess Palace","value": 8,"rarity": "Epic","demand": 1.0,"stability": "stable","rank": 31},
         {"id": "E023","name": "Red Sweater","value": 8,"rarity": "Epic","demand": 1,"stability": "stable","rank": 32},
         {"id": "E028","name": "Tomato Eater Gopher","value": 8,"rarity": "Epic","demand": 1,"stability": "stable","rank": 33},
         {"id": "E029","name": "Autumn Foliage","value": 7,"rarity": "Epic","demand": 0.5,"stability": "stable","rank": 34},
