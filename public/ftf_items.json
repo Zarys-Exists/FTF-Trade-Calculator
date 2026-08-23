@@ -199,7 +199,6 @@
         {"id": "L189","name": "Woodland Staff","value": 3,"rarity": "Legendary","demand": 0.5,"stability": "stable","rank": 197},
         {"id": "L182","name": "Year of the Horse","value": 3,"rarity": "Legendary","demand": 0.5,"stability": "stable","rank": 198},
         {"id": "L183","name": "Zombie Hand","value": 3,"rarity": "Legendary","demand": 0.5,"stability": "stable","rank": 199},
-        {"id": "L200","name": "Strawberry Moo Plushie","value": 0,"rarity": "Legendary","demand": 5,"stability": "stable","rank": 200},
         {"id": "E001","name": "Choco Dip","value": 45,"rarity": "Epic","demand": 2.5,"stability": "stable","rank": 1},
         {"id": "E006","name": "Psycho's Axe","value": 40,"rarity": "Epic","demand": 2,"stability": "stable","rank": 2},
         {"id": "E002","name": "Water Gun","value": 35.0,"rarity": "Epic","demand": 2,"stability": "stable","rank": 3},
