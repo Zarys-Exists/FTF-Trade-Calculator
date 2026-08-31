@@ -1,10 +1,10 @@
-import { FTFData, FTFModalSort, FTFModalController } from "./utils.js";
+9import { FTFData, FTFModalSort, FTFModalController } from "./utils.js";
 import { FTFAuth } from "./auth.js";
 import "./nav.js";
 
 FTFAuth.init();
 
-const LAST_UPDATED = "26 August";
+const LAST_UPDATED = "31 August";
 const HV_DIVISOR = 30;
 const MAX_SLOTS = 27;
 const MAX_QUANTITY = 100;
