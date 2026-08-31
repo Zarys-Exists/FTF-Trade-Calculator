@@ -1,4 +1,4 @@
-9import { FTFData, FTFModalSort, FTFModalController } from "./utils.js";
+import { FTFData, FTFModalSort, FTFModalController } from "./utils.js";
 import { FTFAuth } from "./auth.js";
 import "./nav.js";
 
