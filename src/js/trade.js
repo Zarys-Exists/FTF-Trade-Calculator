@@ -4,7 +4,7 @@ import "./nav.js";
 
 FTFAuth.init();
 
-const LAST_UPDATED = "31 August";
+const LAST_UPDATED = "3 September";
 const HV_DIVISOR = 30;
 const MAX_SLOTS = 27;
 const MAX_QUANTITY = 100;
