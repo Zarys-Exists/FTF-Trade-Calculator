@@ -3,7 +3,7 @@
         {"id": "L001","name": "Party Balloons","value": 300,"rarity": "Legendary","demand": 4,"stability": "stable","rank": 1},
         {"id": "L002","name": "Lovesick Bow","value": 270,"rarity": "Legendary","demand": 3.5,"stability": "stable","rank": 2},
         {"id": "L006","name": "Pumpkin Slice","value": 190,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 3},
-        {"id": "L003","name": "Gothic Bouquet","value": 180,"rarity": "Legendary","demand": 2.5,"stability": "receding","rank": 4},
+        {"id": "L003","name": "Gothic Bouquet","value": 180,"rarity": "Legendary","demand": 2.5,"stability": "struggling","rank": 4},
         {"id": "L004","name": "Devilish Candle","value": 150,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 5},
         {"id": "L008","name": "Icecream Mix","value": 125,"rarity": "Legendary","demand": 2.5,"stability": "struggling","rank": 6},
         {"id": "L005","name": "Spooky Brew","value": 120,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 7},
