@@ -15,7 +15,11 @@ export const FTFData = {
       if (!itemResp.ok) throw new Error("Failed to load items");
 
       const data = await itemResp.json();
-      this.allItems = data.items;
+      // Exclude unvalued items (value 0 or unassigned) from appearing anywhere on the site
+      this.allItems = (data.items || []).filter((item) => {
+        const val = Number(item.value);
+        return !isNaN(val) && val > 0;
+      });
 
       if (exResp && exResp.ok) {
         const exData = await exResp.json();
@@ -128,17 +132,17 @@ export const FTFModalSort = {
         const rarA = FTFModalSort.RARITY_ORDER[a.rarity] ?? 99;
         const rarB = FTFModalSort.RARITY_ORDER[b.rarity] ?? 99;
         if (rarA !== rarB) return dir * (rarA - rarB);
-        
-        const valA = FTFData.calculateItemValue({...a, shg: currentSHG}) ?? 0;
-        const valB = FTFData.calculateItemValue({...b, shg: currentSHG}) ?? 0;
+
+        const valA = FTFData.calculateItemValue({ ...a, shg: currentSHG }) ?? 0;
+        const valB = FTFData.calculateItemValue({ ...b, shg: currentSHG }) ?? 0;
         return -1 * (valA - valB);
       });
     }
 
     if (sortBy === "value") {
       return sorted.sort((a, b) => {
-        const valA = FTFData.calculateItemValue({...a, shg: currentSHG}) ?? 0;
-        const valB = FTFData.calculateItemValue({...b, shg: currentSHG}) ?? 0;
+        const valA = FTFData.calculateItemValue({ ...a, shg: currentSHG }) ?? 0;
+        const valB = FTFData.calculateItemValue({ ...b, shg: currentSHG }) ?? 0;
         return dir * (valB - valA);
       });
     }
@@ -171,7 +175,7 @@ export const FTFModalSort = {
           savedSort = parsed.sort || defaultSort;
           savedReverse = parsed.reverse === true;
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     let sortBy = savedSort;
@@ -184,7 +188,7 @@ export const FTFModalSort = {
           storageKey,
           JSON.stringify({ sort: sortBy, reverse }),
         );
-      } catch (e) {}
+      } catch (e) { }
     };
 
     const setActiveOption = () => {
@@ -269,8 +273,8 @@ export class FTFModalController {
     this.isAddsPending = config.isAddsPending || (() => false);
     this.pageSize = config.pageSize || 40;
     this.onCloseRequest = config.onCloseRequest || (() => true);
-    this.onOpen = config.onOpen || (() => {});
-    this.onClose = config.onClose || (() => {});
+    this.onOpen = config.onOpen || (() => { });
+    this.onClose = config.onClose || (() => { });
 
     this.modal = document.getElementById("item-modal");
     this.itemList = document.getElementById("item-list");
@@ -402,7 +406,7 @@ export class FTFModalController {
     sentinel.id = "item-list-sentinel";
     sentinel.style.cssText = "height:1px;width:100%;grid-column:1/-1;";
     this.itemList.appendChild(sentinel);
-    
+
     this.itemListObserver = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !this.isLoadingMore) this.loadNextBatch();
@@ -414,7 +418,7 @@ export class FTFModalController {
 
   loadNextBatch() {
     if (this.renderedItemCount >= this.filteredItemCache.length) return;
-    
+
     this.isLoadingMore = true;
     const existingSentinel = document.getElementById("item-list-sentinel");
     if (existingSentinel) existingSentinel.remove();
@@ -423,17 +427,17 @@ export class FTFModalController {
       this.renderedItemCount,
       this.renderedItemCount + this.pageSize
     );
-    
+
     const fragment = document.createDocumentFragment();
     batch.forEach((item) => fragment.appendChild(this.renderItem(item, this.currentSHG)));
-    
+
     this.itemList.appendChild(fragment);
     this.renderedItemCount += batch.length;
-    
+
     if (this.renderedItemCount < this.filteredItemCache.length) {
       this.setupScrollObserver();
     }
-    
+
     this.isLoadingMore = false;
   }
 
@@ -452,7 +456,7 @@ export class FTFModalController {
 
     const query = this.searchInput.value.toLowerCase().trim();
     let filtered = this.allItems;
-    
+
     if (this.currentRarity !== "all") {
       filtered = filtered.filter((i) => i.rarity.toLowerCase() === this.currentRarity);
     }
@@ -506,7 +510,7 @@ export class FTFModalController {
 
     const firstBatch = this.filteredItemCache.slice(0, this.pageSize);
     firstBatch.forEach((item) => fragment.appendChild(this.renderItem(item, this.currentSHG)));
-    
+
     this.renderedItemCount = firstBatch.length;
     this.itemList.appendChild(fragment);
 
