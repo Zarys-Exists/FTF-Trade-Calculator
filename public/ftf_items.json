@@ -1,7 +1,7 @@
 {
     "items": [
         {"id": "L001","name": "Party Balloons","value": 300,"rarity": "Legendary","demand": 4,"stability": "stable","rank": 1},
-        {"id": "L002","name": "Lovesick Bow","value": 270,"rarity": "Legendary","demand": 3.5,"stability": "stable","rank": 2},
+        {"id": "L002","name": "Lovesick Bow","value": 270,"rarity": "Legendary","demand": 3.5,"stability": "fluctuating","rank": 2},
         {"id": "L003","name": "Gothic Bouquet","value": 170,"rarity": "Legendary","demand": 3.0,"stability": "stable","rank": 3},
         {"id": "L004","name": "Devilish Candle","value": 150,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 4},
         {"id": "L006","name": "Pumpkin Slice","value": 150,"rarity": "Legendary","demand": 2.5,"stability": "receding","rank": 5},
@@ -14,10 +14,10 @@
         {"id": "L194","name": "Kraken's Ambush","value": 100,"rarity": "Legendary","demand": 3.0,"stability": "doing_well","rank": 12},
         {"id": "L007","name": "Cherry Blossom Tree","value": 95,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 13},
         {"id": "L192","name": "Pearl Piercer","value": 95,"rarity": "Legendary","demand": 2.5,"stability": "improving","rank": 14},
-        {"id": "L191","name": "Phosphor Jellyfish","value": 95,"rarity": "Legendary","demand": 2.5,"stability": "doing_well","rank": 15},
+        {"id": "L191","name": "Phosphor Jellyfish","value": 95,"rarity": "Legendary","demand": 2.5,"stability": "improving","rank": 15},
         {"id": "L009","name": "Batwing Basher","value": 90,"rarity": "Legendary","demand": 3.5,"stability": "stable","rank": 16},
         {"id": "L014","name": "Classic","value": 90,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 17},
-        {"id": "L185","name": "Strawberry Garden","value": 80,"rarity": "Legendary","demand": 2.5,"stability": "improving","rank": 18},
+        {"id": "L185","name": "Strawberry Garden","value": 80,"rarity": "Legendary","demand": 2.5,"stability": "fluctuating","rank": 18},
         {"id": "L011","name": "Psycho's Chainsaw","value": 75,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 19},
         {"id": "L012","name": "Dark Bone Crusher","value": 70,"rarity": "Legendary","demand": 2.5,"stability": "stable","rank": 20},
         {"id": "L031","name": "Hollow Scythe","value": 70,"rarity": "Legendary","demand": 2.5,"stability": "improving","rank": 21},
