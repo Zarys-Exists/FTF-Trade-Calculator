@@ -161,6 +161,17 @@ if (authSignout) {
   });
 }
 
+const authBtn = document.getElementById("auth-btn");
+if (authBtn) {
+  authBtn.addEventListener("click", (e) => {
+    if (!authBtn.classList.contains("logged-in")) {
+      e.preventDefault();
+      e.stopPropagation();
+      FTFAuth.showMaintenanceNotice();
+    }
+  });
+}
+
 document.addEventListener("click", (e) => {
   if (
     authDropdown &&

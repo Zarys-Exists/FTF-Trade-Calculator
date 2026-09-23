@@ -34,20 +34,10 @@ export const FTFAuth = {
 
     if (oauthUserId && oauthSecret) {
       window.history.replaceState({}, "", window.location.pathname);
-
-      account
-        .createSession(oauthUserId, oauthSecret)
-        .then(() => account.get())
-        .then((user) => {
-          this.user = user;
-          this.updateAuthUI();
-          this._handleSignIn();
-        })
-        .catch((err) => {
-          this.user = null;
-          this.updateAuthUI();
-          this._notifyReady();
-        });
+      this.user = null;
+      this.updateAuthUI();
+      this._notifyReady();
+      this.showMaintenanceNotice();
     } else {
       account
         .get()
@@ -92,6 +82,49 @@ export const FTFAuth = {
     this._readyCallbacks = [];
   },
 
+  showMaintenanceNotice() {
+    let overlay = document.getElementById("auth-maintenance-dialog");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "auth-maintenance-dialog";
+      overlay.className = "confirm-overlay";
+      overlay.innerHTML = `
+        <div class="confirm-card">
+          <div class="confirm-title">You may not login now</div>
+          <div class="confirm-msg">Database is currently under maintenance. Logging in is temporarily blocked. We apologize for the inconvenience</div>
+          <div class="confirm-actions">
+            <button class="confirm-btn-primary" id="auth-maintenance-btn">Okay</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove("is-visible");
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && overlay.classList.contains("is-visible")) {
+          overlay.classList.remove("is-visible");
+        }
+      });
+    }
+
+    const btn = overlay.querySelector("#auth-maintenance-btn");
+    if (btn) {
+      btn.onclick = () => {
+        overlay.classList.remove("is-visible");
+      };
+    }
+
+    overlay.classList.add("is-visible");
+    if (btn) {
+      setTimeout(() => btn.focus(), 50);
+    }
+  },
+
   buildItemMaps() {
     if (!FTFData?.allItems?.length) return;
     FTFData.buildItemMaps();
@@ -100,15 +133,7 @@ export const FTFAuth = {
   },
 
   async signInWithDiscord() {
-    if (!account) return;
-
-    const origin = window.location.href.split("#")[0].split("?")[0];
-
-    try {
-      account.createOAuth2Token("discord", origin, origin);
-    } catch (err) {
-      console.error("[FTFAuth] Redirect to Discord failed:", err);
-    }
+    this.showMaintenanceNotice();
   },
 
   async signOut() {
