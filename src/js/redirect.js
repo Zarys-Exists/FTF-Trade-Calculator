@@ -1,4 +1,4 @@
-export const ENABLE_REDIRECT = false;
+export const ENABLE_REDIRECT = true;
 export const REDIRECT_URL = "https://ftfvaluelist.com/";
 
 if (ENABLE_REDIRECT) {
